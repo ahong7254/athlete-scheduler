@@ -1,0 +1,47 @@
+[
+  {
+    "date": "2026-07-05",
+    "label": "Camp arrival / adjustment",
+    "note": "Away at a stay-away swim camp; first week spent settling into new surroundings, no regular pool access yet."
+  },
+  {
+    "date": "2026-07-10",
+    "label": "Training facility located",
+    "note": "Found a facility for regular practice; first logged workout of the period, followed by the Jul 13-19 brick-training block."
+  },
+  {
+    "date": "2026-07-22",
+    "label": "Exam prep begins",
+    "note": "Shifted focus to studying for an important test; minimal exercise for the final three days of this period."
+  },
+  {
+    "date": "2026-07-23",
+    "label": "Father visits for dinner",
+    "note": "Dad arrived and had dinner with the kid; kid returned to the dorm afterward to pack and sleep."
+  },
+  {
+    "date": "2026-07-24",
+    "label": "Travel day, back home",
+    "note": "Half a day in the library continuing to study, then flew home; that night's sleep was at home, not camp."
+  },
+  {
+    "date": "2026-07-25",
+    "label": "Test day",
+    "note": "The important test itself. Outside the Jul 5-24 baseline window; scored against it separately (see notebook)."
+  },
+  {
+    "date": "2026-07-27",
+    "label": "Nantucket trip begins",
+    "note": "Left home in the morning for a 4-day vacation with friends at Nantucket, MA. No structured workouts during the trip; the Outdoor Cycling/Walking sessions logged on Jul 28 read as casual biking/walking around the island, not training."
+  },
+  {
+    "date": "2026-07-29",
+    "label": "Up early for sunrise",
+    "note": "Rose very early with friends to watch the sunrise, resulting in a short (1.52h logged) sleep session that night -- explains the period's highest stress reading; it's a real short night, not a sleep-tracking gap."
+  },
+  {
+    "date": "2026-07-30",
+    "label": "Home from Nantucket",
+    "note": "Traveled home in the afternoon, trip ends."
+  }
+]
