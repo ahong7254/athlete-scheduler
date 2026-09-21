@@ -1,0 +1,2349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Athlete Schedule Optimizer</title>
+<style>
+  :root {
+    --bg: #0f0f11; --bg2: #17171b; --bg3: #1e1e24;
+    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+    --text: #e8e8f0; --text2: #8888a0; --text3: #55556a;
+    --accent: #6c63ff; --accent2: #8b83ff;
+    --radius: 10px; --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'SF Pro Display', -apple-system, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; }
+
+  .shell { max-width: 1080px; margin: 0 auto; padding: 28px 40px 60px; }
+  .page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+
+
+  /* wellness / performance slider */
+  .tradeoff-row { display: flex; align-items: center; gap: 12px; margin-bottom: 18px;
+    background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius);
+    padding: 12px 16px; }
+  .tradeoff-lbl { font-size: 11px; font-weight: 500; white-space: nowrap; min-width: 80px; }
+  .tradeoff-lbl-w { color: #0ea5e9; }
+  .tradeoff-lbl-p { color: #8b5cf6; text-align: right; }
+  .tradeoff-track { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+  .tradeoff-slider { width: 100%; appearance: none; height: 4px; border-radius: 2px; outline: none; cursor: pointer;
+    background: linear-gradient(to right, #0ea5e9, #6c63ff, #8b5cf6); }
+  .tradeoff-slider::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--text); border: 2px solid var(--bg2);
+    box-shadow: 0 0 0 2px var(--accent); cursor: pointer; }
+  .tradeoff-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%;
+    background: var(--text); border: 2px solid var(--bg2); box-shadow: 0 0 0 2px var(--accent); cursor: pointer; }
+  .tradeoff-labels { display: grid; grid-template-columns: 1fr 1fr 1fr; font-size: 10px; color: var(--text3); }
+  .tradeoff-labels span:nth-child(2) { text-align: center; }
+  .tradeoff-labels span:nth-child(3) { text-align: right; }
+  .tradeoff-readout { font-size: 11px; color: var(--text2); white-space: nowrap; min-width: 90px; text-align: right; }
+  .tradeoff-lbl-a { color: #f59e0b; }
+  .tradeoff-lbl-pr { color: #8b5cf6; text-align: right; }
+  .tradeoff-slider-ap { background: linear-gradient(to right, #f59e0b, #6c63ff, #8b5cf6) !important; }
+
+
+  /* summary cards */
+  .sum-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 22px; }
+  .sum-c { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .sum-l { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .sum-v { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; line-height: 1; }
+  .sum-s { font-size: 11px; color: var(--text3); margin-top: 5px; }
+  .week-date-control { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0 0 18px; }
+  .week-date-control label { font-size: 12px; color: var(--text2); }
+  .week-date-control input { width: 150px; padding: 6px 8px; }
+  .btn-save { background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
+    color: var(--text); padding: 6px 12px; font-size: 12px; cursor: pointer; }
+  .btn-save:hover { border-color: var(--accent2); color: var(--accent2); }
+  .schedule-file-status { font-size: 11px; color: var(--text3); }
+
+  /* config */
+  .cfg-panel { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); margin-bottom: 22px; overflow: hidden; }
+  .cfg-hdr { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; cursor: pointer; user-select: none; }
+  .cfg-hdr:hover { background: var(--bg3); }
+  .cfg-hdr-left { font-size: 13px; font-weight: 500; }
+  .cfg-hdr-right { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+  .cfg-body { padding: 16px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; border-top: 0.5px solid var(--border); }
+  .cfg-row { display: flex; flex-direction: column; gap: 6px; }
+  .cfg-lbl { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; }
+  select, input[type="number"], input[type="text"] {
+    background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
+    color: var(--text); padding: 6px 10px; font-size: 13px; width: 100%; }
+  select:focus, input:focus { outline: none; border-color: var(--accent); }
+  .pd-checks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .pd-lbl { display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer;
+    background: var(--bg3); border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 4px 9px; transition: border-color 0.15s; }
+  .pd-lbl:has(input:checked) { border-color: var(--accent); color: var(--accent2); }
+  .pd-lbl input { display: none; }
+  .full-col { grid-column: 1 / -1; }
+  .subj-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .subj-tbl th { text-align: left; font-weight: 400; font-size: 11px; color: var(--text2); padding: 4px 6px; border-bottom: 0.5px solid var(--border); }
+  .subj-tbl td { padding: 4px 6px; }
+  .subj-tbl input { padding: 4px 8px; font-size: 12px; }
+  .subj-tbl input[type="text"]   { width: 100px; }
+  .subj-tbl input[type="number"] { width: 60px; }
+  .td-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .td-chip { display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 24px; border-radius: 4px; font-size: 11px; cursor: pointer;
+    background: var(--bg); border: 0.5px solid var(--border); color: var(--text2);
+    user-select: none; transition: all 0.12s; }
+  .td-chip:hover { border-color: var(--border2); color: var(--text); }
+  .td-on { background: var(--accent); border-color: var(--accent); color: #fff !important; }
+  .td-disabled { opacity: 0.25; cursor: not-allowed; pointer-events: none; }
+  .btn-rm { background: none; border: 0.5px solid var(--border); color: var(--text3);
+    border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 11px; }
+  .btn-rm:hover { border-color: #ef4444; color: #ef4444; }
+  .btn-add { background: none; border: 0.5px solid var(--border2); color: var(--accent2);
+    border-radius: var(--radius-sm); padding: 4px 12px; font-size: 12px; cursor: pointer; }
+  .btn-add:hover { background: var(--bg3); }
+  .cfg-section { grid-column: 1 / -1; border-top: 0.5px solid var(--border); margin-top: 6px; padding-top: 14px; }
+  .cfg-section:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+  .cfg-section-title { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  .cfg-pair { display: flex; gap: 16px; }
+  .cfg-pair .cfg-row { flex: 1; }
+  .cfg-hint b { color: var(--text2); font-weight: 500; }
+  .help-icon { display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; border-radius: 50%; background: var(--bg3);
+    border: 0.5px solid var(--border2); font-size: 9px; color: var(--text2);
+    cursor: default; vertical-align: middle; margin-left: 4px; }
+  .hw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+  .hw-row { display: flex; align-items: center; gap: 8px; background: var(--bg3);
+    border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 6px 10px; }
+  .hw-lbl { font-size: 12px; color: var(--text2); flex: 1; }
+  .hw-unit { font-size: 11px; color: var(--text3); }
+  .btn-refresh { background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm);
+    padding: 8px 18px; font-size: 13px; font-weight: 500; cursor: pointer; margin-top: 12px; }
+  .btn-refresh:hover { background: var(--accent2); }
+
+
+  /* week grid */
+  .week-section { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 8px; }
+  .week-hdr { display: grid; grid-template-columns: 76px 1fr; align-items: center; padding: 8px 14px; gap: 12px; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 0.5px solid var(--border); }
+  .day-row { display: grid; grid-template-columns: 76px 1fr; align-items: center; padding: 8px 14px; gap: 12px; cursor: pointer; border-bottom: 0.5px solid var(--border); transition: background 0.12s; }
+  .day-row:last-child { border-bottom: none; }
+  .day-row:hover, .day-row.sel { background: var(--bg3); }
+  .d-name { font-size: 15px; font-weight: 600; }
+  .d-tag { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .d-date { font-size: 11px; color: var(--text2); margin-top: 1px; }
+  .t-track { position: relative; height: 30px; background: var(--bg); border-radius: 5px; overflow: hidden; }
+  .tblk { position: absolute; top: 2px; bottom: 2px; border-radius: 3px; transition: filter 0.1s; }
+  .tblk:hover { filter: brightness(1.3); }
+
+
+  /* axis / legend */
+  .axis-row { display: grid; grid-template-columns: 76px 1fr; padding: 4px 14px; gap: 12px; }
+  .axis-trk { position: relative; height: 16px; }
+  .axis-mk { position: absolute; font-size: 10px; color: var(--text3); transform: translateX(-50%); white-space: nowrap; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 10px 0 20px; }
+  .leg-i { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+  .leg-sw { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* tooltip */
+  .tip { position: fixed; background: var(--bg3); border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm); padding: 7px 11px; font-size: 12px; color: var(--text);
+    pointer-events: none; z-index: 9999; max-width: 260px; line-height: 1.7; display: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+
+  /* detail panel */
+  .det { background: var(--bg2); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 18px; margin-top: 16px; }
+  .det-hdr { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 0.5px solid var(--border); }
+  .det-title { font-size: 17px; font-weight: 600; }
+  .det-sub { font-size: 12px; color: var(--text2); }
+  .sec-hd { font-size: 10px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.08em; margin: 14px 0 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { padding: 4px 9px; border-radius: var(--radius-sm); font-size: 11px; white-space: nowrap; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+  .stat-c { background: var(--bg3); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .stat-l { font-size: 10px; color: var(--text2); margin-bottom: 3px; }
+  .stat-v { font-size: 16px; font-weight: 600; }
+  .perf-row { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; }
+  .perf-num { font-size: 20px; font-weight: 600; color: var(--accent2); }
+  .perf-sub { font-size: 12px; color: var(--text2); }
+  .tl-list { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; }
+  .tl-item { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: var(--radius-sm); }
+  .tl-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .tl-label { font-size: 12px; flex: 1; }
+  .tl-time { font-size: 11px; color: var(--text2); white-space: nowrap; }
+  .tl-dur { font-size: 11px; color: var(--text3); white-space: nowrap; min-width: 44px; text-align: right; }
+
+
+
+  @media (max-width: 680px) {
+    .shell { padding: 20px 16px 40px; }
+    .sum-grid { grid-template-columns: 1fr 1fr 1fr; }
+    .cfg-body { grid-template-columns: 1fr 1fr; }
+    .day-row, .week-hdr, .axis-row { grid-template-columns: 56px 1fr; padding: 7px 10px; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     STRESS TAB — rendering only; see the script block near the bottom
+     for the "regenerated by stress.ipynb" data marker.
+     ═══════════════════════════════════════════════════════════════════ */
+  .tab-nav { display: flex; gap: 22px; margin-bottom: 20px; border-bottom: 0.5px solid var(--border); }
+  .tab-btn { background: none; border: none; color: var(--text2); font-size: 13px; font-weight: 500;
+    padding: 0 0 10px; cursor: pointer; border-bottom: 2px solid transparent; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  #tab-stress {
+    --s-1: #3987e5; --s-2: #d95926; --s-3: #199e70; --s-4: #c98500;
+    --s-6: #008300; --s-7: #9085e9; --s-8: #e66767; --s-good: #0ca30c;
+    --s-grid: rgba(255,255,255,0.07); --s-axis-base: rgba(255,255,255,0.18);
+  }
+  .s-head { margin-bottom: 20px; }
+  .s-head p { margin: 0; color: var(--text2); font-size: 13px; }
+  .s-import-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .s-baseline-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .s-baseline-row input[type="date"] { width: auto; padding: 5px 8px; font-size: 12px; }
+  .s-baseline-lbl { font-size: 12px; color: var(--text2); }
+  .s-import-status { margin-top: 8px !important; font-size: 12px !important; color: var(--text3) !important; line-height: 1.6; }
+  .s-empty { background: var(--bg2); border: 0.5px dashed var(--border2); border-radius: var(--radius);
+    padding: 32px 20px; text-align: center; color: var(--text2); font-size: 13px; }
+
+  .s-tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 24px; }
+  .s-tile { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .s-tile .s-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .s-tile .s-value { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; }
+  .s-tile .s-delta { font-size: 11px; margin-top: 4px; }
+  .s-tile .s-delta.s-good { color: var(--s-good); }
+  .s-tile .s-delta.s-muted { color: var(--text3); }
+
+  #tab-stress section { margin-bottom: 26px; }
+  .s-section-title { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+  .s-section-sub { font-size: 12px; color: var(--text2); margin: 0 0 12px; }
+
+  .s-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .s-grid-3 { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 14px; }
+  .s-grid-3-eq { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  @media (max-width: 900px) { .s-grid-2, .s-grid-3, .s-grid-3-eq { grid-template-columns: 1fr; } }
+
+  /* Stacked panels sharing one time axis -- full-width, no gap between
+     panels (only the bottom one draws x-axis labels/ticks) so they read as
+     one multi-row chart rather than separate cards. */
+  .s-stack { display: flex; flex-direction: column; gap: 0; }
+  .s-stack .s-card { border-radius: 0; border-bottom: none; padding: 2px 12px; }
+  .s-stack .s-card:first-child { border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
+  .s-stack .s-card:last-child { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); border-bottom: 0.5px solid var(--border); }
+
+  .s-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; }
+  .s-card h3 { font-size: 12.5px; font-weight: 600; margin: 0 0 2px; }
+  .s-card .s-sub { font-size: 11px; color: var(--text3); margin: 0 0 8px; }
+
+  #tab-stress svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .s-gridline { stroke: var(--s-grid); stroke-width: 1; }
+  .s-axis-baseline { stroke: var(--s-axis-base); stroke-width: 1; }
+  .s-axis-label { fill: var(--text3); font-size: 10px; }
+  .s-panel-label { font-size: 10.5px; font-weight: 700; fill: var(--text2); }
+  .s-crosshair { stroke: var(--s-axis-base); stroke-width: 1; pointer-events: none; opacity: 0; }
+  .s-hover-dot { pointer-events: none; opacity: 0; }
+  .s-hit-rect { fill: transparent; }
+
+  .s-tooltip {
+    position: absolute; pointer-events: none; z-index: 9999;
+    background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
+    padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    opacity: 0; transform: translate(-50%, -110%); transition: opacity .08s linear; white-space: nowrap;
+  }
+  .s-t-date { color: var(--text3); font-size: 11px; margin-bottom: 3px; }
+  .s-t-row { display: flex; align-items: center; gap: 6px; }
+  .s-t-key { width: 10px; height: 2px; border-radius: 1px; display: inline-block; }
+  .s-t-val { font-weight: 600; color: var(--text); margin-left: auto; padding-left: 10px; }
+  .s-t-name { color: var(--text2); }
+
+  .s-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; font-size: 12px; color: var(--text2); }
+  .s-legend-item { display: flex; align-items: center; gap: 6px; }
+  .s-legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+  .s-insights { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+  .s-insights h3 { font-size: 14px; margin: 0 0 10px; }
+  .s-insights ul { margin: 0 0 14px; padding-left: 18px; }
+  .s-insights li { margin-bottom: 7px; font-size: 13px; line-height: 1.5; color: var(--text2); }
+  .s-insights li b { color: var(--text); }
+  .s-caveat-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text3); margin: 14px 0 8px; }
+
+  .s-callout { background: var(--bg2); border: 0.5px solid var(--border); border-left: 3px solid var(--s-8); border-radius: var(--radius); padding: 16px 20px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+  .s-callout-figure { font-size: 26px; font-weight: 600; color: var(--text); white-space: nowrap; }
+  .s-callout-unit { font-size: 12px; font-weight: 500; color: var(--text2); margin-left: 6px; }
+  .s-callout-body { flex: 1; min-width: 240px; font-size: 13px; line-height: 1.5; color: var(--text2); }
+  .s-callout-body b { color: var(--text); }
+
+  .s-foot { margin-top: 4px; font-size: 11px; color: var(--text3); }
+</style>
+<!--
+  LP Solver — javascript-lp-solver
+  Author:  Justin Walpole
+  License: MIT
+  Source:  https://github.com/JWally/jsLPSolver
+  Via CDN: https://cdn.jsdelivr.net/npm/javascript-lp-solver/prod/solver.min.js
+
+  Implements the revised simplex method for solving linear and mixed-integer
+  linear programs. Used here to solve a pure continuous LP (no integer variables).
+
+  Simplex method originally due to:
+    Dantzig, G. B. (1963). Linear programming and extensions.
+    Princeton University Press.
+-->
+<script src="https://cdn.jsdelivr.net/npm/javascript-lp-solver/prod/solver.min.js"></script>
+</head>
+<body>
+<div class="shell">
+  <div class="page-title">Athlete Schedule Optimizer</div>
+  <div class="page-sub">LP-optimized weekly schedule — click any day for full timeline</div>
+
+  <div class="tab-nav" id="tab-nav">
+    <button class="tab-btn active" id="tab-btn-schedule" data-tab="schedule">Schedule</button>
+    <button class="tab-btn" id="tab-btn-stress" data-tab="stress">Stress</button>
+  </div>
+
+<div id="tab-schedule">
+<div id="infeasible-banner" style="display:none;background:#7f1d1d;border:0.5px solid #ef444460;border-radius:10px;padding:14px 18px;margin-bottom:18px;color:#fca5a5">
+  <div style="font-size:13px;font-weight:600;margin-bottom:6px">⚠ Schedule is infeasible — constraints cannot all be satisfied simultaneously</div>
+  <div id="infeasible-detail" style="font-size:12px;line-height:1.7;color:#fecaca"></div>
+  <div style="font-size:11px;color:#f87171;margin-top:8px">The schedule shown uses minimum values for all variables. Adjust the settings highlighted above to restore feasibility.</div>
+</div>
+<div class="sum-grid" id="sum-grid"></div>
+
+<div class="week-date-control">
+  <label for="schedule-week-start">Week starting Monday</label>
+  <input type="date" id="schedule-week-start" value="2026-07-06" onchange="setWeekStartDate(this.value)">
+  <button class="btn-save" type="button" onclick="saveSchedule()">Save schedule</button>
+  <button class="btn-save" type="button" onclick="document.getElementById('schedule-load-input').click()">Load schedule</button>
+  <input type="file" id="schedule-load-input" accept=".json,application/json" style="display:none" onchange="loadScheduleFile(this.files[0]);this.value=''">
+  <span class="schedule-file-status" id="schedule-file-status" aria-live="polite"></span>
+</div>
+
+    <div class="cfg-hdr" id="cfg-hdr">
+      <span class="cfg-hdr-left">Configuration</span>
+      <span class="cfg-hdr-right">edit schedule parameters <span id="cfg-arr">▾</span></span>
+    </div>
+    <div id="cfg-body" style="display:none"></div>
+  </div>
+
+  <div class="week-section">
+    <div class="week-hdr"><div>Day</div><div>Timeline (5 am → 5 am)</div></div>
+    <div id="day-grid"></div>
+  </div>
+  <div class="axis-row" id="axis-row"></div>
+  <div class="legend" id="legend"></div>
+  <div id="detail"></div>
+</div>
+
+<div id="tab-stress" style="display:none">
+
+  <div class="s-head">
+    <p>Import the iPhone Shortcut's Health-sample text export to compute the stress index — nothing is hardcoded here, everything below comes from whatever you import.</p>
+    <div class="s-import-row">
+      <button class="btn-refresh" id="s-import-btn" style="margin-top:0">Import health data…</button>
+      <input type="file" id="s-import-input" accept=".txt" multiple style="display:none">
+      <button class="btn-rm" id="s-baseline-clear-btn" style="display:none">Clear baseline</button>
+    </div>
+    <div class="s-baseline-row" id="s-baseline-row" style="display:none">
+      <span class="s-baseline-lbl">Baseline period:</span>
+      <input type="date" id="s-baseline-start">
+      <span class="s-baseline-lbl">to</span>
+      <input type="date" id="s-baseline-end">
+      <button class="btn-add" id="s-baseline-btn">Set as baseline</button>
+    </div>
+    <p class="s-import-status" id="s-import-status"></p>
+  </div>
+
+  <div id="s-empty" class="s-empty">No data imported yet — click "Import health data…" and select one or more of the Shortcut's exported <code>.txt</code> files.</div>
+
+  <div id="s-content" style="display:none">
+    <div class="s-tiles" id="s-tiles"></div>
+
+    <section>
+      <p class="s-section-title">Recovery, sleep &amp; composite stress index</p>
+      <p class="s-section-sub" id="s-chart-sub">Five panels on one shared time axis (date labels only on the bottom panel). Stress index blends same-day HRV, RHR, respiratory rate, sleep duration, deep-sleep share and sleep fragmentation into one z-scored number.</p>
+      <div class="s-stack">
+        <div class="s-card"><div id="s-chart-hrv"></div></div>
+        <div class="s-card"><div id="s-chart-rhr"></div></div>
+        <div class="s-card"><div id="s-chart-sleep"></div></div>
+        <div class="s-card"><div id="s-chart-deeppct"></div></div>
+        <div class="s-card"><div id="s-chart-stress"></div></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="s-insights">
+        <h3>Summary</h3>
+        <ul id="s-summary-list"></ul>
+        <div class="s-caveat-title">Caveats</div>
+        <ul id="s-caveats-list"></ul>
+      </div>
+    </section>
+
+    <div class="s-foot" id="s-foot"></div>
+  </div>
+
+</div>
+
+</div>
+<div class="tip" id="tip"></div>
+<div class="s-tooltip" id="s-tooltip"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const TLS = 5;
+const WIND_DOWN_DUR = 0.25;
+
+function getComm(dt) {
+  const c = cfg.commute;
+  switch(dt) {
+    case 'school':
+    case 'friday':           return r2(c.toSchool + c.fromSchool);
+    case 'practice_weekday': return r2(c.toSchool + c.fromSchool + c.toPractice + c.fromPractice);
+    case 'practice_weekend': return r2(c.toPractice + c.fromPractice);
+    case 'game_weekday':     return r2(c.toSchool + c.toGame + c.fromGame);
+    case 'game_weekend':     return r2(c.toGame + c.fromGame);
+    default:                 return 0;
+  }
+}
+const FREE_B = {1:[0.5,12],2:[0.5,12],3:[0.5,12],4:[0.5,12],5:[1.5,12],6:[1,12],7:[0.5,13]};
+const UCURVES = {
+  taper:   {6:1.4,5:1.8,4:2.0,3:1.4,2:0.7,1:0.3,0:0.0},
+  maintain:{6:1.0,5:1.0,4:1.0,3:1.0,2:1.0,1:1.0,0:0.0},
+  ramp:    {6:0.6,5:0.8,4:1.0,3:1.3,2:1.7,1:2.2,0:0.0}
+};
+// PBOUNDS[profile][days-to-game] = [loFrac, hiFrac] as fractions of cfg.practiceMax.
+// getPB() uses hiFrac × practiceMax for the LP upper bound.
+// loFrac is kept for reference but the LP lower bound is now cfg.practiceMin (default 0),
+// meaning the athlete can always skip practice — the LP only goes higher if urgency warrants it.
+//
+// Profile shapes:
+//   maintain — consistent load all week (75–100% of max every day).
+//   taper    — peaks 4–5 days out, drops steeply to 15–35% the day before game.
+//   ramp     — light early in week, builds to 85–100% approaching game.
+const PBOUNDS = {
+  taper:   {6:[0.55,0.80],5:[0.75,1.00],4:[0.80,1.00],3:[0.65,0.85],2:[0.35,0.60],1:[0.15,0.35],0:[0,0]},
+  maintain:{6:[0.75,1.00],5:[0.75,1.00],4:[0.75,1.00],3:[0.75,1.00],2:[0.75,1.00],1:[0.75,1.00],0:[0,0]},
+  ramp:    {6:[0.25,0.50],5:[0.40,0.65],4:[0.55,0.75],3:[0.70,0.85],2:[0.80,1.00],1:[0.85,1.00],0:[0,0]}
+};
+const BC = {
+  "Sleep":"#3b82f6","Morning Routine":"#f59e0b","Classes":"#10b981",
+  "Commute":"#6b7280","Homework":"#d97706","Practice":"#8b5cf6",
+  "Game":"#ef4444","Study":"#22c55e","Study Break":"#4ade80","Lunch":"#f97316",
+  "Dinner":"#ea580c","Free Time":"#0ea5e9","Wind Down":"#6366f1"
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// CONFIG STATE
+// ═══════════════════════════════════════════════════════════════════════
+let cfg = {
+  commute: {
+    toSchool:      0.5,   // home → school (hrs)
+    fromSchool:    0.5,   // school → home on non-practice days (hrs)
+    toPractice:    0.33,  // home → practice (hrs)
+    fromPractice:  0.33,  // practice → home (hrs)
+    toGame:        0.75,  // home/school → game venue (hrs)
+    fromGame:      0.75,  // game venue → home (hrs)
+  },
+  sportProfile: "maintain",
+  gameDay: 6,
+  gameDuration: 2.0,
+  classHours: 7,
+  practiceDays: [1,2,3,4,5,6],
+  urgencyScale: 2.0,
+  baseStudyWeight: 0.1,
+  homework: { school:2.5, friday:2.5, practice_weekday:2.5, practice_weekend:0.5, game_weekday:1.5, game_weekend:0.5, rest:1.5 },
+  wake: { school:6.833, friday:6.833, practice_weekday:6.833, practice_weekend:8.5, game_weekday:6.833, game_weekend:8.5, rest:10.0 },
+  practiceStart:    { practice_weekday:16.5, practice_weekend:9.0 },
+  gameStart:         { game_weekday:17.0, game_weekend:13.0 },  // when game begins (hrs since midnight)
+  practiceMax: 3.0,               // hard ceiling on practice (hrs) — no profile can exceed this
+  practiceMin: 0,                 // absolute floor on practice (hrs) — 0 means athlete can skip entirely
+  freeFloor: 8,                   // minimum weekly free time (hrs) — spread evenly as a daily lower bound
+  academicPressureThreshold: 1.5, // ratio of total study urgency to practice urgency at which
+                                  // practice hi-bound starts to compress toward lo
+  studyBreakInterval: 0.75,
+  studyBreakDuration: 0.083,
+  wellnessWeights: { sleep: 0.9, meals: 0.8, free: 0.4, practice: 1.0 },
+  minSleep: 7.0,         // LP lower bound on sleep (hrs) — minimum guaranteed sleep per night
+  maxSleep: 10.0,        // LP upper bound on sleep (hrs) — athlete can sleep up to this much
+  dinnerTime: 18.5,
+  // Base (hi-bound) durations per day type. LP can compress down to mealFloor.
+  // Game/practice days are shorter by default — less time available, higher stress.
+  mealBases: {
+    dinner: { school:0.75, friday:0.75, practice_weekday:0.5, practice_weekend:0.75, game_weekday:0.5, game_weekend:0.75, rest:1.0 },
+    lunch:  { practice_weekend:0.5, rest:0.75 }  // only day types that include an explicit lunch block
+  },
+  mealFloor: 0.5,  // 30 min minimum per meal — LP can never go below this
+  mealMax: 1.0,    // maximum duration for any single meal — LP ceiling
+  subjects: [
+    {name:"Math",    testDays:[1],   weight:1.9, preTestFloor:0, postTestMax:0.1},
+    {name:"History", testDays:[2,3], weight:1.6, preTestFloor:0, postTestMax:0.1},
+    {name:"English", testDays:[3],   weight:1.4, preTestFloor:0, postTestMax:0.1},
+    {name:"Science", testDays:[5],   weight:1.0, preTestFloor:0, postTestMax:0.1}
+  ]
+};
+
+let perfAlpha  = 0.5;   // 0 = pure recovery, 0.5 = baseline, 1 = pure performance
+let sched = [], selDay = null, cfgOpen = false;
+let weekStartDate = localStorage.getItem('scheduleOptimizer.weekStartDate') || '2026-07-06';
+
+// ═══════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════
+const clamp = (v,lo,hi) => Math.max(lo, Math.min(hi, v));
+const r2 = v => Math.round(v * 100) / 100;
+
+function fmtT(t) {
+  t = ((t % 24) + 24) % 24;
+  const h = Math.floor(t), m = Math.round((t - h) * 60);
+  if (m === 60) return fmtT(h + 1);
+  return `${h % 12 || 12}:${String(m).padStart(2,"0")} ${h < 12 ? "AM" : "PM"}`;
+}
+function fmtD(h) {
+  const hh = Math.floor(h), mm = Math.round((h - hh) * 60);
+  if (hh > 0 && mm > 0) return `${hh}h ${mm}m`;
+  if (hh > 0) return `${hh}h`;
+  return `${mm}m`;
+}
+function toTimeStr(h) {
+  const hh = Math.floor(h), mm = Math.round((h - hh) * 60);
+  return `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
+}
+function fromTimeStr(s) {
+  const [hh, mm] = s.split(":").map(Number);
+  return hh + mm / 60;
+}
+
+function parseLocalDate(dateStr) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+function scheduleDate(dayNumber) {
+  const date = parseLocalDate(weekStartDate);
+  date.setDate(date.getDate() + dayNumber - 1);
+  return date;
+}
+function formatScheduleDate(dayNumber) {
+  return scheduleDate(dayNumber).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function setWeekStartDate(value) {
+  const date = parseLocalDate(value);
+  if (Number.isNaN(date.getTime())) return;
+  const mondayOffset = (date.getDay() + 6) % 7;
+  date.setDate(date.getDate() - mondayOffset);
+  weekStartDate = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+  localStorage.setItem('scheduleOptimizer.weekStartDate', weekStartDate);
+  const input = document.getElementById('schedule-week-start');
+  if (input) input.value = weekStartDate;
+  refresh();
+}
+
+function getDT(n) {
+  if (cfg.gameDay && n === cfg.gameDay) return n <= 5 ? "game_weekday" : "game_weekend";
+  if (cfg.practiceDays.includes(n)) return n <= 5 ? "practice_weekday" : "practice_weekend";
+  if (n === 5) return "friday";
+  return n <= 4 ? "school" : "rest";
+}
+function dtg(n) {
+  if (!cfg.gameDay) return 99;
+  const d = cfg.gameDay - n;
+  // If d < -1, the day appears to be "after" the game but may actually be
+  // before it in a circular week (e.g. game=Mon, day=Sun → d=-6 → should be +1).
+  return d < -1 ? d + 7 : d;
+}
+function getPB(n) {
+  const dt = getDT(n);
+  if (!cfg.practiceDays.includes(n) || dt.startsWith("game")) return [0, 0];
+
+  const g = dtg(n);
+  if (g === -1) return [0, 0]; // recovery day
+
+  const gClamped = g <= -2
+    ? 6
+    : Math.min(Math.max(g, 0), 6);
+
+  const bounds = g <= -2
+    ? PBOUNDS.maintain[6]
+    : (PBOUNDS[cfg.sportProfile]?.[gClamped] ?? [0.75, 1.0]);
+
+  const [loFrac, hiFrac] = bounds;
+
+  let pracLo = r2(Math.max(cfg.practiceMin, loFrac * cfg.practiceMax));
+  let pracHi = r2(hiFrac * cfg.practiceMax);
+
+  const d = n - 1;
+  const practiceUrg   = pUrg(d);
+  const totalStudyUrg = cfg.subjects.reduce((a, s) => a + sUrg(s, d), 0);
+
+  if (practiceUrg > 0.001 && totalStudyUrg > 0) {
+    const pressureRatio = totalStudyUrg / (practiceUrg * cfg.academicPressureThreshold);
+    if (pressureRatio > 1) {
+      const squeeze = clamp((pressureRatio - 1), 0, 1);
+      pracHi = r2(Math.max(pracLo, pracHi - squeeze * (pracHi - pracLo)));
+    }
+  }
+
+  return [pracLo, pracHi];
+}
+function avail(n) {
+  const dt = getDT(n), cls = n <= 5 ? cfg.classHours : 0;
+  return r2(24 - 0.5 - cls - getComm(dt) - cfg.homework[dt]); // 0.5h morning routine
+}
+
+// getMealVars(dt): returns LP variable defs for meals on this day type.
+// Dinner is always present. Lunch only on day types that include an explicit lunch block.
+// lo = mealFloor (30 min), hi = day-type base (the "relaxed" default for that day).
+// The LP compresses toward lo on busy days when budget is tight.
+function getMealVars(dt) {
+  const floor = cfg.mealFloor;
+  const hi    = Math.max(floor, cfg.mealMax);
+  const vars  = [];
+  vars.push({ key: "Dinner", lo: floor, hi });
+  if (cfg.mealBases.lunch[dt] != null) {
+    vars.push({ key: "Lunch", lo: floor, hi });
+  }
+  return vars;
+}
+
+// Tests happen during the school day. By the time after-school scheduling runs,
+// a test on day n is already over — treat it the same as any past test.
+// Only days with left > 0 count as upcoming; left === 0 means the test was today.
+function sUrg(s, d) {
+  const dayNum = d + 1;
+  if (!s.testDays || s.testDays.length === 0) return s.weight * cfg.baseStudyWeight;
+  const upcoming = s.testDays.map(td => td - dayNum).filter(left => left > 0);
+  if (upcoming.length === 0) return s.weight * 0.05;  // all tests past (or today = already done)
+  const nearest = Math.min(...upcoming);
+  return s.weight * (cfg.urgencyScale / nearest);
+}
+
+function pUrg(d) {
+  const n = d + 1, g = dtg(n);
+  if (g === -1) return 0;                          // recovery day — no practice urgency
+  if (g < -1)   return cfg.wellnessWeights.practice * 0.8;
+  if (g < 0)    return cfg.wellnessWeights.practice * 0.3;
+  const curve = UCURVES[cfg.sportProfile] || UCURVES.maintain;
+  const mk = Math.max(...Object.keys(curve).map(Number));
+  return cfg.wellnessWeights.practice * (curve[Math.min(g, mk)] ?? 1);
+}
+
+// Daily upper bound for study hours on a given subject.
+// Active (before all tests pass): 2.25h/day max.
+// Post-test: capped at postTestMax (default 0.1h — light review only).
+function studyHiCap(s, n) {
+  const postMax = s.postTestMax ?? 0.1;
+  if (!s.testDays || s.testDays.length === 0) return 8;
+  return s.testDays.every(td => n >= td) ? postMax : 8;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SOLVER — joint weekly LP via jsLPSolver
+// ═══════════════════════════════════════════════════════════════════════
+
+function hideInfeasibleBanner() {
+  const el = document.getElementById('infeasible-banner');
+  if (el) el.style.display = 'none';
+}
+
+function showInfeasibleBanner(model) {
+  const banner = document.getElementById('infeasible-banner');
+  const detail = document.getElementById('infeasible-detail');
+  if (!banner || !detail) return;
+
+  const reasons = [];
+
+  // Check each day's budget: sum of all lower bounds vs available budget
+  for (let i = 0; i < 7; i++) {
+    const n = i + 1;
+    const budgetKey = `budget_${n}`;
+    const budget = model.constraints[budgetKey]?.max ?? 0;
+    const sumLo = Object.entries(model.variables).reduce((acc, [, vDef]) => {
+      if (!vDef[budgetKey]) return acc;
+      // Find the lo constraint for this variable
+      const loKey = Object.keys(vDef).find(k => k.endsWith('_lo') && model.constraints[k]);
+      return acc + (loKey ? (model.constraints[loKey].min ?? 0) : 0);
+    }, 0);
+    if (sumLo > budget + 0.05) {
+      reasons.push(`${DAYS[i]}: minimum obligations (${r2(sumLo)}h) exceed available budget (${r2(budget)}h) — try reducing practice min, pre-test floors, or free time floor`);
+    }
+  }
+
+  // Check pre-test floors vs total available study capacity before each test
+  cfg.subjects.forEach(s => {
+    if (!s.preTestFloor || s.preTestFloor <= 0 || !s.testDays?.length) return;
+    s.testDays.forEach(td => {
+      const key = `pretest_${sk(s.name)}_${td}`;
+      const floor = model.constraints[key]?.min ?? 0;
+      if (floor <= 0) return;
+      const totalCap = Object.entries(model.variables).reduce((acc, [vk, vDef]) => {
+        if (!vDef[key]) return acc;
+        const hiKey = vk + '_hi';
+        return acc + (model.constraints[hiKey]?.max ?? 2.25);
+      }, 0);
+      if (totalCap < floor - 0.05) {
+        reasons.push(`${s.name} pre-test floor (${floor}h before ${DAYS[td-1]}) exceeds total study capacity (${r2(totalCap)}h) — reduce the pre-test floor`);
+      }
+    });
+  });
+
+  // Check free floor vs total free capacity across all days
+  if (cfg.freeFloor > 0) {
+    const totalFreeCap = Array.from({length:7}, (_, i) => FREE_B[i+1][1]).reduce((a,b) => a+b, 0);
+    const totalFreeMin = Array.from({length:7}, (_, i) => FREE_B[i+1][0]).reduce((a,b) => a+b, 0);
+    if (cfg.freeFloor > totalFreeCap) {
+      reasons.push(`Weekly free time floor (${cfg.freeFloor}h) exceeds the maximum possible free time (${totalFreeCap}h) — reduce the free time floor`);
+    }
+  }
+
+  if (reasons.length === 0) {
+    reasons.push('The combination of constraints cannot be satisfied simultaneously. Try reducing pre-test floors, free time floor, or practice min.');
+  }
+
+  detail.innerHTML = reasons.map(r => `• ${r}`).join('<br>');
+  banner.style.display = 'block';
+}
+
+// Sanitise subject names for use as LP constraint/variable keys.
+function sk(str) { return str.replace(/[^a-zA-Z0-9]/g, '_'); }
+
+// Adds a variable and its [lo, hi] bound constraints to the LP model.
+function addLPVar(model, key, objW, budgetKey, lo, hi, extraCoeffs) {
+  const vDef = { obj: objW, [budgetKey]: 1, ...extraCoeffs };
+  if (lo > 0.001) {
+    model.constraints[key + '_lo'] = { min: lo };
+    vDef[key + '_lo'] = 1;
+  }
+  if (isFinite(hi)) {
+    model.constraints[key + '_hi'] = { max: hi };
+    vDef[key + '_hi'] = 1;
+  }
+  model.variables[key] = vDef;
+}
+
+function solveWeekLP() {
+  const wellM = Math.pow(3,  1 - 2 * perfAlpha);
+  const perfM = Math.pow(3, -1 + 2 * perfAlpha);
+
+  const model = { optimize: 'obj', opType: 'max', constraints: {}, variables: {} };
+
+  // ── Per-day budget constraints ──
+  for (let i = 0; i < 7; i++) {
+    const n = i + 1;
+    model.constraints[`budget_${n}`] = { max: r2(avail(n)) };
+  }
+
+  // ── Cross-day: free time floor ──
+  if (cfg.freeFloor > 0) model.constraints['free_floor'] = { min: cfg.freeFloor };
+
+  // ── Cross-day: pre-test study floors (one per subject × test day) ──
+  cfg.subjects.forEach(s => {
+    if (!s.preTestFloor || s.preTestFloor <= 0 || !s.testDays?.length) return;
+    s.testDays.forEach(td => {
+      model.constraints[`pretest_${sk(s.name)}_${td}`] = { min: s.preTestFloor };
+    });
+  });
+
+  // ── Per-day variables ──
+  for (let i = 0; i < 7; i++) {
+    const n = i + 1, d = i;
+    const dt = getDT(n);
+    const [pracLo, pracHi] = getPB(n);
+    const mealVars   = getMealVars(dt);
+    const bk = `budget_${n}`;
+
+    // Sleep — decision variable: min = derived from wake/bedtime, max = cfg.maxSleep
+    const sleepMin = cfg.minSleep;
+    const sleepMax = Math.max(sleepMin, cfg.maxSleep);
+    addLPVar(model, `sleep_${n}`, cfg.wellnessWeights.sleep * wellM, bk, sleepMin, sleepMax, {});
+
+    // Practice
+    if (pracHi > 0) {
+      addLPVar(model, `prac_${n}`, pUrg(d) * perfM, bk, pracLo, pracHi, {});
+    }
+
+    // Meals
+    mealVars.forEach(mv => {
+      addLPVar(model, `${mv.key.toLowerCase()}_${n}`, cfg.wellnessWeights.meals * wellM, bk, mv.lo, mv.hi, {});
+    });
+
+    // Free time
+    const freeExtras = cfg.freeFloor > 0 ? { free_floor: 1 } : {};
+    addLPVar(model, `free_${n}`, cfg.wellnessWeights.free * wellM, bk, FREE_B[n][0], FREE_B[n][1], freeExtras);
+
+    // Study per subject
+    cfg.subjects.forEach(s => {
+      const hi = studyHiCap(s, n);
+      if (hi < 0.01) return;
+      // Contribute to pre-test floor constraints for tests this day precedes
+      const pretestCoeffs = {};
+      if (s.preTestFloor > 0 && s.testDays?.length) {
+        s.testDays.forEach(td => { if (n < td) pretestCoeffs[`pretest_${sk(s.name)}_${td}`] = 1; });
+      }
+      addLPVar(model, `study_${sk(s.name)}_${n}`, sUrg(s, d) * perfM, bk, 0, hi, pretestCoeffs);
+    });
+  }
+
+  let sol;
+  try {
+    sol = solver.Solve(model);
+  } catch(e) {
+    console.error('LP solver threw:', e);
+    sol = { feasible: false };
+  }
+
+  if (!sol.feasible) {
+    showInfeasibleBanner(model);
+  } else {
+    hideInfeasibleBanner();
+  }
+
+  // Extract per-day variable maps (falls back to lo values if infeasible)
+  return Array.from({length: 7}, (_, i) => {
+    const n = i + 1;
+    const dt = getDT(n);
+    const [pracLo, pracHi] = getPB(n);
+    const mealVars = getMealVars(dt);
+    const sleepMin = cfg.minSleep;
+    const res = {};
+    res['Sleep'] = r2(sol[`sleep_${n}`] ?? sleepMin);
+    if (pracHi > 0) res['Practice'] = r2(sol[`prac_${n}`] ?? pracLo);
+    mealVars.forEach(mv => { res[mv.key] = r2(sol[`${mv.key.toLowerCase()}_${n}`] ?? mv.lo); });
+    res['Free'] = r2(sol[`free_${n}`] ?? FREE_B[n][0]);
+    cfg.subjects.forEach(s => { res['Study:' + s.name] = r2(sol[`study_${sk(s.name)}_${n}`] ?? 0); });
+    return res;
+  });
+}
+
+// ── Assemble a full day result from solver output ─────────────────────
+function assembleRow(n, varRes) {
+  const d = n - 1, dt = getDT(n), pb = getPB(n);
+
+  const res = { Practice: 0, ...varRes };
+  Object.keys(res).forEach(k => res[k] = r2(res[k]));
+
+  // Meals = LP-allocated dinner + lunch (lunch only present on applicable day types)
+  res.Meals = r2((res.Dinner || 0) + (res.Lunch || 0));
+
+  const stTot = r2(cfg.subjects.reduce((a, s) => a + (res["Study:" + s.name] || 0), 0));
+  const perf  = r2(pUrg(d) * res.Practice + cfg.subjects.reduce((a, s) => a + sUrg(s, d) * (res["Study:" + s.name] || 0), 0));
+
+  // Practice decision breakdown (three stages):
+  //   pracRawHi  — profile ceiling before any pressure (PBOUNDS hi × practiceMax)
+  //   pb[0]/[1]  — [lo, hi] after academic pressure squeeze, passed to LP
+  //   Practice   — LP allocation within [lo, hi]
+  const gClamped   = Math.min(Math.max(dtg(n), 0), 6);
+  const fracEntry  = PBOUNDS[cfg.sportProfile]?.[gClamped];
+  const pracRawHi  = fracEntry ? r2(fracEntry[1] * cfg.practiceMax) : pb[1];
+  const pracRawLo  = fracEntry ? r2(Math.max(cfg.practiceMin, fracEntry[0] * cfg.practiceMax)) : pb[0];
+  const pressureSqueeze = pracRawHi > pb[0] + 0.01
+    ? r2(Math.max(0, 1 - (pb[1] - pb[0]) / (pracRawHi - pb[0])))
+    : 0;
+  // LP squeeze: how far below hi the greedy placed practice (budget competition with study)
+  const lpSqueeze = pb[1] > pb[0] + 0.01
+    ? r2(Math.max(0, 1 - (res.Practice - pb[0]) / (pb[1] - pb[0])))
+    : 0;
+
+  return {
+    ...res, n, dt, dayName: DAYS[d], dateLabel: formatScheduleDate(n),
+    wake: cfg.wake[dt], pb, comm: getComm(dt), hw: cfg.homework[dt], avail: r2(avail(n)),
+    stTot, perf, dtg: dtg(n),
+    pracRawLo, pracRawHi, pressureSqueeze, lpSqueeze,
+    isGame: getDT(n).startsWith("game"),
+    isPrac: cfg.practiceDays.includes(n) && !getDT(n).startsWith("game")
+  };
+}
+
+// ── Main compute ──────────────────────────────────────────────────────
+function compute() {
+  const weekResults = solveWeekLP();
+  sched = Array.from({length: 7}, (_, i) => {
+    const row = assembleRow(i + 1, weekResults[i]);
+    row.tl = buildTL(row);
+    return row;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// TIMELINE BUILDER  (FIX #7: practice_weekday uses doStudy; FIX #4: practice_weekend calls doStudy)
+// ═══════════════════════════════════════════════════════════════════════
+function buildTL(row) {
+  const { n, dt } = row;
+  const cls = n <= 5 ? cfg.classHours : 0;
+  const hw  = cfg.homework[dt];
+  const blks = [];
+  let cur = row.wake;
+
+  // Derive the target wind-down start from LP-allocated sleep and wake time
+  const windDownStart = r2((row.wake + 24) - row.Sleep - WIND_DOWN_DUR);
+
+  function push(type, label, dur) {
+    if (dur >= 0.05) { blks.push({ start: cur, dur, type, label }); cur += dur; }
+  }
+
+  blks.push({ start:0, dur:0, type:"Sleep", label:"Sleep" }); // placeholder, overwritten below
+
+  // studyPlaced tracks hours placed per subject so pre/post dinner calls don't double-place
+  if (!row._studyPlaced) row._studyPlaced = {};
+
+  // doStudy(untilTime?): place study blocks, respecting already-placed amounts.
+  // Stops at untilTime if given, otherwise places all remaining.
+  // FIX #3 in timeline: filter l >= 0 so test-day subjects sort into correct urgency position
+  function doStudy(untilTime) {
+    cfg.subjects
+      .map(s => ({ s, urg: sUrg(s, n-1), hrs: row["Study:" + s.name] || 0 }))
+      .sort((a, b) => b.urg - a.urg)
+      .forEach(({ s, hrs }) => {
+        const already = row._studyPlaced[s.name] || 0;
+        let remaining = r2(hrs - already);
+        if (remaining < 0.05) return;
+
+        const upcoming  = (s.testDays||[]).map(td => td - n).filter(l => l > 0);
+        const nearest   = upcoming.length ? Math.min(...upcoming) : null;
+        const allPassed = (s.testDays||[]).length > 0 && (s.testDays||[]).every(td => td <= n);
+        const tag = nearest != null ? ` · ${nearest}d to test`
+                  : allPassed      ? " · tests done" : "";
+
+        while (remaining > 0.05) {
+          if (untilTime !== undefined && cur >= untilTime - 0.01) break;
+          let chunk = Math.min(remaining, cfg.studyBreakInterval);
+          if (untilTime !== undefined) chunk = Math.min(chunk, r2(untilTime - cur));
+          if (chunk < 0.05) break;
+
+          push("Study", `Study: ${s.name}${tag}`, chunk);
+          row._studyPlaced[s.name] = r2((row._studyPlaced[s.name] || 0) + chunk);
+          remaining = r2(remaining - chunk);
+
+          if (remaining > 0.05 && cfg.studyBreakDuration > 0) {
+            if (untilTime === undefined || cur + cfg.studyBreakDuration <= untilTime)
+              push("Study Break", `Study break (${fmtD(cfg.studyBreakDuration)}) — ${s.name}`, cfg.studyBreakDuration);
+          }
+        }
+      });
+  }
+
+  push("Morning Routine", "Morning Routine", 0.5);
+
+  if (dt === "school" || dt === "friday") {
+    push("Commute", "Commute to school", cfg.commute.toSchool);
+    push("Classes", `Classes (${cls}h)`, cls);
+    push("Commute", "Commute home", cfg.commute.fromSchool);
+    push("Homework", "Homework", hw);
+    const dinnerAt = Math.max(cur, cfg.dinnerTime);
+    doStudy(dinnerAt);
+    cur = dinnerAt;
+    push("Dinner", `Dinner (${fmtD(row.Dinner)})`, row.Dinner);
+    doStudy(windDownStart);
+
+  } else if (dt === "practice_weekday") {
+    push("Commute", "Commute to school", cfg.commute.toSchool);
+    push("Classes", `Classes (${cls}h)`, cls);
+    push("Commute", "Commute home", cfg.commute.fromSchool);
+
+    const pracCommuteStart = cfg.practiceStart.practice_weekday - cfg.commute.toPractice;
+
+    // Homework and study at home before practice commute
+    const preGap = r2(Math.max(0, pracCommuteStart - cur));
+    const hwPre  = Math.min(hw, preGap);
+    if (hwPre >= 0.05) push("Homework", "Homework (before practice)", hwPre);
+    const hwPost = r2(hw - hwPre);
+
+    doStudy(pracCommuteStart);  // study up to practice commute start
+
+    if (row.Practice >= 0.05) {
+      cur = Math.max(cur, pracCommuteStart);
+      push("Commute", "Commute to practice", cfg.commute.toPractice);
+      push("Practice", `Practice (${cfg.sportProfile}${cfg.gameDay ? `, ${Math.max(0,row.dtg)}d to game` : ''}) · starts ${fmtT(cfg.practiceStart.practice_weekday)}`, row.Practice);
+      push("Commute", "Commute home", cfg.commute.fromPractice);
+    }
+
+    if (hwPost >= 0.05) push("Homework", "Homework (after practice)", hwPost);
+
+    const dinnerAt2 = Math.max(cur, cfg.dinnerTime);
+    doStudy(dinnerAt2);
+    cur = dinnerAt2;
+    push("Dinner", `Dinner (${fmtD(row.Dinner)})`, row.Dinner);
+    doStudy(windDownStart);
+
+  } else if (dt === "practice_weekend") {
+    if (row.Practice >= 0.05) {
+      const pracCommuteStart = cfg.practiceStart.practice_weekend - cfg.commute.toPractice;
+
+      // Fill the pre-practice window with homework and study, same as practice_weekday
+      const preGapWE = r2(Math.max(0, pracCommuteStart - cur));
+      const hwPreWE  = Math.min(hw, preGapWE);
+      if (hwPreWE >= 0.05) push("Homework", "Homework (before practice)", hwPreWE);
+      const hwPostWE = r2(hw - hwPreWE);
+      doStudy(pracCommuteStart);
+
+      cur = Math.max(cur, pracCommuteStart);
+      push("Commute", "Commute to practice", cfg.commute.toPractice);
+      push("Practice", `Practice (${cfg.sportProfile}${cfg.gameDay ? `, ${Math.max(0,row.dtg)}d to game` : ''}) · starts ${fmtT(cfg.practiceStart.practice_weekend)}`, row.Practice);
+      push("Commute", "Commute home", cfg.commute.fromPractice);
+
+      if (hwPostWE >= 0.05) push("Homework", "Homework (after practice)", hwPostWE);
+    } else {
+      push("Homework", "Homework", hw);
+    }
+    cur = Math.max(cur, 12.0);
+    push("Lunch", `Lunch (${fmtD(row.Lunch)})`, row.Lunch);
+    const dinnerAtWE = Math.max(cur, cfg.dinnerTime);
+    doStudy(dinnerAtWE);
+    cur = dinnerAtWE;
+    push("Dinner", `Dinner (${fmtD(row.Dinner)})`, row.Dinner);
+    doStudy(windDownStart);
+
+  } else if (dt === "game_weekday") {
+    push("Commute", "Commute to school", cfg.commute.toSchool);
+    push("Classes", `Classes (${cls}h)`, cls);
+    const gameStartWD = cfg.gameStart.game_weekday;
+    const departWD = r2(gameStartWD - cfg.commute.toGame);
+
+    // Use the pre-game window for homework and study
+    const preGameGap = r2(Math.max(0, departWD - cur));
+    const hwPreGame  = Math.min(hw, preGameGap);
+    if (hwPreGame >= 0.05) push("Homework", "Homework (before game)", hwPreGame);
+    const hwPostGame = r2(hw - hwPreGame);
+    doStudy(departWD);
+
+    cur = Math.max(cur, departWD);
+    push("Commute", `School → venue (game at ${fmtT(gameStartWD)})`, cfg.commute.toGame);
+    cur = Math.max(cur, gameStartWD);
+    push("Game", `Game · ${fmtT(gameStartWD)} (${cfg.gameDuration}h)`, cfg.gameDuration);
+    push("Commute", "Commute home", cfg.commute.fromGame);
+    if (hwPostGame >= 0.05) push("Homework", "Homework (after game)", hwPostGame);
+    const dinnerAtGW = Math.max(cur, cfg.dinnerTime);
+    doStudy(dinnerAtGW);
+    cur = dinnerAtGW;
+    push("Dinner", `Dinner (${fmtD(row.Dinner)})`, row.Dinner);
+    doStudy(windDownStart);
+
+  } else if (dt === "game_weekend") {
+    const gameStartWE = cfg.gameStart.game_weekend;
+    const departWE = r2(gameStartWE - cfg.commute.toGame);
+
+    // Use the pre-game window for homework and study
+    const preGameGapWE = r2(Math.max(0, departWE - cur));
+    const hwPreGameWE  = Math.min(hw, preGameGapWE);
+    if (hwPreGameWE >= 0.05) push("Homework", "Homework (before game)", hwPreGameWE);
+    const hwPostGameWE = r2(hw - hwPreGameWE);
+    doStudy(departWE);
+
+    cur = Math.max(cur, departWE);
+    push("Commute", `Commute to venue (game at ${fmtT(gameStartWE)})`, cfg.commute.toGame);
+    cur = Math.max(cur, gameStartWE);
+    push("Game", `Game · ${fmtT(gameStartWE)} (${cfg.gameDuration}h)`, cfg.gameDuration);
+    push("Commute", "Commute home", cfg.commute.fromGame);
+    if (hwPostGameWE >= 0.05) push("Homework", "Homework (after game)", hwPostGameWE);
+    const dinnerAtGWE = Math.max(cur, cfg.dinnerTime);
+    cur = dinnerAtGWE;
+    push("Dinner", `Dinner (${fmtD(row.Dinner)})`, row.Dinner);
+    doStudy(windDownStart);
+
+  } else { // rest
+    cur = Math.max(cur, 12.0);
+    push("Lunch", `Lunch (${fmtD(row.Lunch)})`, row.Lunch);
+    push("Homework", "Homework", hw);
+    const dinnerAtRest = Math.max(cur, cfg.dinnerTime);
+    doStudy(dinnerAtRest);
+    cur = dinnerAtRest;
+    push("Dinner", `Dinner (${fmtD(row.Dinner)})`, row.Dinner);
+    doStudy(windDownStart);
+
+  }
+
+  // Wind-down: place at the LP-scheduled bedtime, or right after last activity if it ran late.
+  cur = Math.max(cur, windDownStart);
+  const windDownEnd = r2(cur + WIND_DOWN_DUR);
+  push("Wind Down", `Wind down → sleep at ${fmtT(windDownEnd)}`, WIND_DOWN_DUR);
+
+  // Recompute actual sleep from real bedtime so the bar always matches what's shown.
+  const sleepStart  = windDownEnd % 24;
+  const actualSleep = r2(((row.wake - sleepStart) + 24) % 24);
+  blks[0] = { start: sleepStart, dur: actualSleep, type: "Sleep",
+    label: `Sleep  (${fmtD(actualSleep)})  ${fmtT(sleepStart)} → ${fmtT(row.wake)}` };
+
+  // Gap-fill: any gap ≥ 3 min between blocks becomes Free Time
+  const dayBlks = blks.slice(1).sort((a, b) => a.start - b.start);
+  const filled  = [];
+  for (let i = 0; i < dayBlks.length; i++) {
+    const prev    = filled.length ? filled[filled.length - 1] : null;
+    const prevEnd = prev ? r2(prev.start + prev.dur) : row.wake;
+    const gap     = r2(dayBlks[i].start - prevEnd);
+    if (gap >= 0.05)
+      filled.push({ start: prevEnd, dur: gap, type:"Free Time", label:`Free time  (${fmtD(gap)})` });
+    filled.push(dayBlks[i]);
+  }
+  return [blks[0], ...filled];
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════════════════
+function toX(t) { return (((t - TLS) % 24 + 24) % 24) / 24 * 100; }
+
+function renderBlocks(row) {
+  return row.tl.map(b => {
+    const c = BC[b.type] || "#666";
+    const tipText = `${b.label} | ${fmtT(b.start)}–${fmtT(b.start + b.dur)} (${fmtD(b.dur)})`;
+    const attr = `class="tblk" data-tip="${tipText.replace(/"/g,'&quot;')}"`;
+    if (b.type === "Sleep") {
+      const xS = toX(b.start).toFixed(2);
+      const xE = toX(((b.start + b.dur) % 24 + 24) % 24).toFixed(2);
+      return `<div ${attr} style="left:${xS}%;right:0;background:${c}40;border-left:2px solid ${c}"></div>`
+           + `<div ${attr} style="left:0;width:${xE}%;background:${c}40;border-right:2px solid ${c}"></div>`;
+    }
+    const x1 = toX(b.start);
+    const w  = Math.max(0.3, toX(b.start + b.dur) - x1).toFixed(2);
+    return `<div ${attr} style="left:${x1.toFixed(2)}%;width:${w}%;background:${c}40;border-left:2px solid ${c}"></div>`;
+  }).join("");
+}
+
+function renderSummary() {
+  const weekPerf  = r2(sched.reduce((a, r) => a + r.perf, 0));
+  const totS      = r2(sched.reduce((a, r) => a + r.stTot, 0));
+  const avgSl     = (sched.reduce((a, r) => a + (r.tl[0]?.dur ?? r.Sleep), 0) / 7).toFixed(1);
+  const totPrac   = r2(sched.reduce((a, r) => a + (r.Practice || 0), 0));
+  const totFree   = r2(sched.reduce((a, r) => a + (r.Free || 0), 0));
+
+  const perfCtx = perfAlpha > 0.65 ? "performance-weighted" :
+                  perfAlpha < 0.35 ? "recovery-weighted"    : "balanced";
+
+  document.getElementById("sum-grid").innerHTML = `
+<div class="sum-c">
+      <div class="sum-l">Weekly performance <span class="help-icon" data-tip="Sum of (urgency × hours) across all study and practice sessions for the week. Urgency = subject weight ÷ days until test for study; profile curve × practice weight for practice. Higher = more high-priority work completed.">?</span></div>
+      <div class="sum-v" style="color:var(--accent2)">${weekPerf.toFixed(1)}</div>
+      <div class="sum-s">${perfCtx} · urgency × hours</div>
+    </div>
+    <div class="sum-c">
+      <div class="sum-l">Total study</div>
+      <div class="sum-v">${fmtD(totS)}</div>
+      <div class="sum-s">${cfg.subjects.length} subjects tracked</div>
+    </div>
+    <div class="sum-c">
+      <div class="sum-l">Avg sleep</div>
+      <div class="sum-v">${avgSl}h</div>
+      <div class="sum-s">min ${cfg.minSleep}h · max ${cfg.maxSleep}h</div>
+    </div>
+    <div class="sum-c">
+      <div class="sum-l">Total practice</div>
+      <div class="sum-v" style="color:#8b5cf6">${fmtD(totPrac)}</div>
+      <div class="sum-s">${sched.filter(r=>r.isPrac).length} practice days</div>
+    </div>
+    <div class="sum-c">
+      <div class="sum-l">Total free time</div>
+      <div class="sum-v" style="color:#0ea5e9">${fmtD(totFree)}</div>
+      <div class="sum-s">floor: ${cfg.freeFloor}h/wk</div>
+    </div>`;
+}
+
+
+function renderCfg() {
+  const pdc = DAYS.map((d, i) =>
+    `<label class="pd-lbl"><input type="checkbox" ${cfg.practiceDays.includes(i+1)?"checked":""} onchange="togglePD(${i+1},this.checked)">${d}</label>`
+  ).join("");
+
+  const sr = cfg.subjects.map((s, i) => {
+    const chips = DAYS.map((d, di) => {
+      const dn = di + 1, isWE = dn >= 6, checked = (s.testDays||[]).includes(dn);
+      return `<label class="td-chip${checked?" td-on":""}${isWE?" td-disabled":""}">
+        <input type="checkbox" style="display:none" ${checked?"checked":""} ${isWE?"disabled":""} onchange="toggleTestDay(${i},${dn},this.checked)">${d[0]}${dn}
+      </label>`;
+    }).join("");
+    return `<tr>
+      <td><input type="text" value="${s.name}" onchange="updSubj(${i},'name',this.value)"></td>
+      <td><div class="td-chips">${chips}</div></td>
+      <td><input type="number" value="${s.weight}" min="0.1" max="5" step="0.1" onchange="updSubj(${i},'weight',+this.value)" style="width:58px"></td>
+      <td><input type="number" value="${s.preTestFloor ?? 0}" min="0" max="20" step="0.5" onchange="updSubj(${i},'preTestFloor',+this.value)" style="width:58px" data-tip="Min total hours studied before nearest test for ${s.name}"></td>
+      <td><input type="number" value="${s.postTestMax ?? 0.1}" min="0" max="3" step="0.1" onchange="updSubj(${i},'postTestMax',+this.value)" style="width:58px" data-tip="Max hours/day for ${s.name} after all tests have passed"></td>
+      <td><button class="btn-rm" onclick="removeSubj(${i})">✕</button></td></tr>`;
+  }).join("");
+
+  const hwWeekendVal = cfg.homework["rest"];
+  const hwRows = `
+    <div class="hw-row"><span class="hw-lbl">Mon–Thu (school)</span><input type="number" value="${cfg.homework.school}" min="0" max="5" step="0.25" onchange="setWeekdaySchoolHomework(+this.value)" style="width:64px"><span class="hw-unit">hrs</span></div>
+    <div class="hw-row"><span class="hw-lbl">Friday</span><input type="number" value="${cfg.homework.friday}" min="0" max="5" step="0.25" onchange="cfg.homework.friday=+this.value;refresh()" style="width:64px"><span class="hw-unit">hrs</span></div>
+    <div class="hw-row"><span class="hw-lbl">Game weekday</span><input type="number" value="${cfg.homework.game_weekday}" min="0" max="5" step="0.25" onchange="cfg.homework.game_weekday=+this.value;refresh()" style="width:64px"><span class="hw-unit">hrs</span></div>
+    <div class="hw-row"><span class="hw-lbl">Weekends (all)</span><input type="number" value="${hwWeekendVal}" min="0" max="5" step="0.25" onchange="setWeekendHomework(+this.value)" style="width:64px"><span class="hw-unit">hrs</span></div>
+    <div class="hw-row"><span class="hw-lbl">Game weekend</span><input type="number" value="${cfg.homework.game_weekend}" min="0" max="5" step="0.25" onchange="cfg.homework.game_weekend=+this.value;refresh()" style="width:64px"><span class="hw-unit">hrs</span></div>`;
+
+  const wakeRows = `
+    <div class="hw-row"><span class="hw-lbl">Weekdays (Mon–Fri)</span><input type="time" value="${toTimeStr(cfg.wake.school)}" onblur="setWeekdayWake(fromTimeStr(this.value))" style="width:100px;padding:4px 8px"><span class="hw-unit" style="font-size:11px;color:var(--text2)">${fmtT(cfg.wake.school)}</span></div>
+    <div class="hw-row"><span class="hw-lbl">Weekend practice</span><input type="time" value="${toTimeStr(cfg.wake.practice_weekend)}" onblur="cfg.wake.practice_weekend=fromTimeStr(this.value);refresh()" style="width:100px;padding:4px 8px"><span class="hw-unit" style="font-size:11px;color:var(--text2)">${fmtT(cfg.wake.practice_weekend)}</span></div>
+    <div class="hw-row"><span class="hw-lbl">Weekend game day</span><input type="time" value="${toTimeStr(cfg.wake.game_weekend)}" onblur="cfg.wake.game_weekend=fromTimeStr(this.value);refresh()" style="width:100px;padding:4px 8px"><span class="hw-unit" style="font-size:11px;color:var(--text2)">${fmtT(cfg.wake.game_weekend)}</span></div>
+    <div class="hw-row"><span class="hw-lbl">Rest day</span><input type="time" value="${toTimeStr(cfg.wake.rest)}" onblur="cfg.wake.rest=fromTimeStr(this.value);refresh()" style="width:100px;padding:4px 8px"><span class="hw-unit" style="font-size:11px;color:var(--text2)">${fmtT(cfg.wake.rest)}</span></div>`;
+
+
+
+
+
+  document.getElementById("cfg-body").innerHTML = `
+    <div class="cfg-body">
+
+
+      <!-- ── Sliders ───────────────────────────────────────── -->
+      <div class="cfg-section full-col">
+        <div class="cfg-section-title">Priority Sliders</div>
+      </div>
+
+      <div class="cfg-row full-col" style="padding:0">
+        <div class="tradeoff-row" style="margin-bottom:8px">
+          <span class="tradeoff-lbl tradeoff-lbl-w">Recovery <span class="help-icon" data-tip="Shifts the objective between recovery (free time, meals) and performance (study, practice). At max recovery, the LP protects sleep and free time. At max performance, it maximises urgency-weighted study and practice.">?</span></span>
+          <div class="tradeoff-track">
+            <input type="range" class="tradeoff-slider" id="perf-slider"
+              min="0" max="1" step="0.01" value="${perfAlpha}"
+              oninput="setPerfAlpha(+this.value)">
+            <div class="tradeoff-labels">
+              <span>sleep · free time</span><span>balanced</span><span>study · practice</span>
+            </div>
+          </div>
+          <span class="tradeoff-lbl tradeoff-lbl-p">Performance</span>
+          <span class="tradeoff-readout" id="tradeoff-readout">${
+            perfAlpha < 0.2 ? 'max recovery' : perfAlpha < 0.4 ? 'recovery focus' :
+            perfAlpha < 0.6 ? 'balanced' : perfAlpha < 0.8 ? 'performance focus' : 'max performance'
+          }</span>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;padding-right:4px">
+          <span style="font-size:11px;color:var(--text3);margin-right:6px">value:</span>
+          <input type="number" id="perf-alpha-input" value="${perfAlpha}" min="0" max="1" step="0.01"
+            style="width:64px;font-size:12px;padding:3px 6px"
+            onchange="const s=document.getElementById('perf-slider');if(s)s.value=+this.value;setPerfAlpha(+this.value)">
+        </div>
+
+        <div class="tradeoff-row" style="margin-bottom:8px">
+          <span class="tradeoff-lbl tradeoff-lbl-a">Academics <span class="help-icon" data-tip="How much study urgency it takes to start cutting practice time. Low = a little urgency cuts practice hard; high = practice is protected even under heavy study load.">?</span></span>
+          <div class="tradeoff-track">
+            <input type="range" class="tradeoff-slider tradeoff-slider-ap" id="ap-slider"
+              min="0" max="1" step="0.01" value="${apToSlider(cfg.academicPressureThreshold)}"
+              oninput="setAcadPressure(+this.value)">
+            <div class="tradeoff-labels">
+              <span>tests cut practice</span><span>balanced</span><span>practice protected</span>
+            </div>
+          </div>
+          <span class="tradeoff-lbl tradeoff-lbl-pr">Practice</span>
+          <span class="tradeoff-readout" id="ap-readout">${(() => {
+            const t = apToSlider(cfg.academicPressureThreshold);
+            return t < 0.2 ? 'tests cut practice hard' : t < 0.4 ? 'tests cut practice' :
+                   t < 0.6 ? 'balanced' : t < 0.8 ? 'practice focus' : 'practice protected';
+          })()}</span>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;padding-right:4px">
+          <span style="font-size:11px;color:var(--text3);margin-right:6px">threshold:</span>
+          <input type="number" id="ap-threshold-input-2" value="${cfg.academicPressureThreshold}" min="0.5" max="5" step="0.1"
+            style="width:64px;font-size:12px;padding:3px 6px"
+            onchange="const t=apToSlider(+this.value);const s=document.getElementById('ap-slider');if(s)s.value=t;setAcadPressure(t)">
+        </div>
+
+        <div class="tradeoff-row" style="margin-bottom:8px">
+          <span class="tradeoff-lbl" style="color:#22c55e">Light <span class="help-icon" data-tip="Sets the urgency scale: weight × (scale ÷ days until test). Higher = more aggressive front-loading of study before exams. Internally sets the urgency scale parameter.">?</span></span>
+          <div class="tradeoff-track">
+            <input type="range" class="tradeoff-slider" id="urgency-slider"
+              min="0" max="1" step="0.01" value="${urgencyToSlider(cfg.urgencyScale)}"
+              style="background:linear-gradient(to right,#22c55e,#f59e0b,#ef4444)"
+              oninput="setUrgencyScale(+this.value)">
+            <div class="tradeoff-labels">
+              <span>light studying</span><span>moderate</span><span>heavy cramming</span>
+            </div>
+          </div>
+          <span class="tradeoff-lbl" style="color:#ef4444;text-align:right">Heavy</span>
+          <span class="tradeoff-readout" id="urgency-readout">${(() => {
+            const t = urgencyToSlider(cfg.urgencyScale);
+            return t < 0.2 ? 'very light' : t < 0.4 ? 'light' :
+                   t < 0.6 ? 'moderate' : t < 0.8 ? 'heavy' : 'max cramming';
+          })()}</span>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:4px;padding-right:4px">
+          <span style="font-size:11px;color:var(--text3);margin-right:6px">urgency scale:</span>
+          <input type="number" id="urgency-scale-input-2" value="${cfg.urgencyScale}" min="0.5" max="6" step="0.1"
+            style="width:64px;font-size:12px;padding:3px 6px"
+            onchange="const t=urgencyToSlider(+this.value);const s=document.getElementById('urgency-slider');if(s)s.value=t;setUrgencyScale(t)">
+        </div>
+      </div>
+
+      <!-- ── Game & Sport ─────────────────────────────────── -->
+      <div class="cfg-section full-col">
+        <div class="cfg-section-title">Game &amp; Sport</div>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Sport profile <span class="help-icon" data-tip="Taper — peaks 4d out, drops before game. Maintain — steady load all week. Ramp — builds heaviest near game day.">?</span></span>
+        <select onchange="cfg.sportProfile=this.value;refresh()">
+          ${["taper","maintain","ramp"].map(p=>`<option${cfg.sportProfile===p?" selected":""}>${p}</option>`).join("")}
+        </select>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Game day</span>
+        <select onchange="cfg.gameDay=this.value?+this.value:null;refresh()">
+          <option value="">— none —</option>
+          ${DAYS.map((d,i)=>`<option value="${i+1}"${cfg.gameDay===i+1?" selected":""}>${d}</option>`).join("")}
+        </select>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Game duration (hrs)</span>
+        <input type="number" value="${cfg.gameDuration}" min="1" max="4" step="0.5" onchange="cfg.gameDuration=+this.value;refresh()">
+      </div>
+
+      <!-- ── Practice ──────────────────────────────────────── -->
+      <div class="cfg-section full-col">
+        <div class="cfg-section-title">Practice</div>
+      </div>
+      <div class="cfg-row full-col">
+        <span class="cfg-lbl">Practice days</span>
+        <div class="pd-checks">${pdc}</div>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Max (hrs) <span class="help-icon" data-tip="Hard ceiling on practice. Profile percentages are applied to this value.">?</span></span>
+        <input type="number" value="${cfg.practiceMax}" min="0.5" max="6" step="0.25" onchange="cfg.practiceMax=+this.value;refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Min (hrs) <span class="help-icon" data-tip="Absolute floor. 0 = athlete can always skip.">?</span></span>
+        <input type="number" value="${cfg.practiceMin}" min="0" max="${cfg.practiceMax}" step="0.25" onchange="cfg.practiceMin=Math.min(+this.value,cfg.practiceMax);refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Game weekday time <span class="help-icon" data-tip="When the game begins on a weekday. The commute to the venue is calculated from end of classes to this time.">?</span></span>
+        <input type="time" value="${toTimeStr(cfg.gameStart.game_weekday)}" onblur="cfg.gameStart.game_weekday=fromTimeStr(this.value);refresh()" style="width:100px;padding:4px 8px">
+        <span class="hw-unit" style="font-size:11px;color:var(--text2)">${fmtT(cfg.gameStart.game_weekday)}</span>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Game weekend time <span class="help-icon" data-tip="When the game begins on a weekend day.">?</span></span>
+        <input type="time" value="${toTimeStr(cfg.gameStart.game_weekend)}" onblur="cfg.gameStart.game_weekend=fromTimeStr(this.value);refresh()" style="width:100px;padding:4px 8px">
+        <span class="hw-unit" style="font-size:11px;color:var(--text2)">${fmtT(cfg.gameStart.game_weekend)}</span>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Weekday start</span>
+        <input type="time" value="${toTimeStr(cfg.practiceStart.practice_weekday)}" onblur="cfg.practiceStart.practice_weekday=fromTimeStr(this.value);refresh()" style="width:100px;padding:4px 8px">
+        <span class="hw-unit" style="font-size:11px;color:var(--text2)">${fmtT(cfg.practiceStart.practice_weekday)}</span>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Weekend start</span>
+        <input type="time" value="${toTimeStr(cfg.practiceStart.practice_weekend)}" onblur="cfg.practiceStart.practice_weekend=fromTimeStr(this.value);refresh()" style="width:100px;padding:4px 8px">
+        <span class="hw-unit" style="font-size:11px;color:var(--text2)">${fmtT(cfg.practiceStart.practice_weekend)}</span>
+      </div>
+
+      <!-- ── Commute ────────────────────────────────────────── -->
+      <div class="cfg-section full-col">
+        <div class="cfg-section-title">Commute</div>
+      </div>
+      <div class="cfg-row full-col">
+        <div class="hw-grid">
+          <div class="hw-row"><span class="hw-lbl">Home → School</span><input type="number" value="${Math.round(cfg.commute.toSchool*60)}" min="0" max="120" step="5" onchange="cfg.commute.toSchool=+this.value/60;refresh()" style="width:64px"><span class="hw-unit">min</span></div>
+          <div class="hw-row"><span class="hw-lbl">School → Home</span><input type="number" value="${Math.round(cfg.commute.fromSchool*60)}" min="0" max="120" step="5" onchange="cfg.commute.fromSchool=+this.value/60;refresh()" style="width:64px"><span class="hw-unit">min</span></div>
+          <div class="hw-row"><span class="hw-lbl">Home → Practice</span><input type="number" value="${Math.round(cfg.commute.toPractice*60)}" min="0" max="120" step="5" onchange="cfg.commute.toPractice=+this.value/60;refresh()" style="width:64px"><span class="hw-unit">min</span></div>
+          <div class="hw-row"><span class="hw-lbl">Practice → Home</span><input type="number" value="${Math.round(cfg.commute.fromPractice*60)}" min="0" max="120" step="5" onchange="cfg.commute.fromPractice=+this.value/60;refresh()" style="width:64px"><span class="hw-unit">min</span></div>
+          <div class="hw-row"><span class="hw-lbl">To Game venue <span class="help-icon" data-tip="Minimum travel time to game venue. On weekdays, the actual commute fills the gap from school → game start if longer.">?</span></span><input type="number" value="${Math.round(cfg.commute.toGame*60)}" min="0" max="180" step="5" onchange="cfg.commute.toGame=+this.value/60;refresh()" style="width:64px"><span class="hw-unit">min</span></div>
+          <div class="hw-row"><span class="hw-lbl">Game venue → Home</span><input type="number" value="${Math.round(cfg.commute.fromGame*60)}" min="0" max="180" step="5" onchange="cfg.commute.fromGame=+this.value/60;refresh()" style="width:64px"><span class="hw-unit">min</span></div>
+        </div>
+      </div>
+
+      <!-- ── Schedule ───────────────────────────────────────── -->
+      <div class="cfg-section full-col">
+        <div class="cfg-section-title">Schedule</div>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Class hours / day</span>
+        <input type="number" value="${cfg.classHours}" min="4" max="9" step="0.5" onchange="cfg.classHours=+this.value;refresh()">
+      </div>
+      <div class="cfg-row full-col">
+        <span class="cfg-lbl">Homework (hrs)</span>
+        <div class="hw-grid">${hwRows}</div>
+      </div>
+      <div class="cfg-row full-col">
+        <span class="cfg-lbl">Wake-up time</span>
+        <div class="hw-grid">${wakeRows}</div>
+      </div>
+
+      <!-- ── Sleep & Meals ──────────────────────────────────── -->
+      <div class="cfg-section full-col">
+        <div class="cfg-section-title">Sleep &amp; Meals</div>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Min sleep (hrs) <span class="help-icon" data-tip="LP lower bound on sleep — the optimizer will never schedule less than this per night.">?</span></span>
+        <input type="number" value="${cfg.minSleep}" min="4" max="12" step="0.5" onchange="cfg.minSleep=Math.min(+this.value,cfg.maxSleep);refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Max sleep (hrs) <span class="help-icon" data-tip="LP upper bound on sleep. The optimizer may schedule more sleep on lighter days when budget allows.">?</span></span>
+        <input type="number" value="${cfg.maxSleep}" min="6" max="14" step="0.5" onchange="cfg.maxSleep=Math.max(+this.value,cfg.minSleep);refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Dinner time</span>
+        <input type="time" value="${toTimeStr(cfg.dinnerTime)}" onblur="cfg.dinnerTime=fromTimeStr(this.value);refresh()" style="width:100px;padding:4px 8px">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Meal min (min) <span class="help-icon" data-tip="Minimum duration per meal — LP never goes below this.">?</span></span>
+        <input type="number" value="${Math.round(cfg.mealFloor*60)}" min="15" max="60" step="5" onchange="cfg.mealFloor=+this.value/60;refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Meal max (min) <span class="help-icon" data-tip="Maximum duration per meal — LP ceiling.">?</span></span>
+        <input type="number" value="${Math.round(cfg.mealMax*60)}" min="${Math.round(cfg.mealFloor*60)}" max="120" step="5" onchange="cfg.mealMax=Math.max(cfg.mealFloor,+this.value/60);refresh()">
+      </div>
+
+      <!-- ── Academics ──────────────────────────────────────── -->
+      <div class="cfg-section full-col">
+        <div class="cfg-section-title">Academics</div>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Study break interval (hrs) <span class="help-icon" data-tip="Max study chunk before a break is inserted.">?</span></span>
+        <input type="number" value="${cfg.studyBreakInterval}" min="0.25" max="3" step="0.25" onchange="cfg.studyBreakInterval=+this.value;refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Study break duration (min)</span>
+        <input type="number" value="${r2(cfg.studyBreakDuration*60)}" min="2" max="20" step="1" onchange="cfg.studyBreakDuration=+this.value/60;refresh()">
+      </div>
+      <div class="cfg-row full-col">
+        <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px">
+          <span class="cfg-lbl" style="margin:0">Subjects</span>
+          <button class="btn-add" onclick="addSubj()">+ Add subject</button>
+        </div>
+        <table class="subj-tbl">
+          <tr><th style="width:110px">Subject</th><th>Test days</th><th style="width:65px" data-tip="Relative importance of this subject (0.1–5). Higher = LP prioritises it more in the objective. E.g. a weight of 2 gets twice the urgency score of a weight of 1.">Weight (0.1–5)</th><th style="width:75px" data-tip="Min total hours studied before nearest test.">Pre-test floor</th><th style="width:75px" data-tip="Max hrs/day after all tests passed.">Post-test max</th><th style="width:30px"></th></tr>
+          ${sr}
+        </table>
+      </div>
+
+      <!-- ── Wellness Weights ───────────────────────────────── -->
+      <div class="cfg-section full-col">
+        <div class="cfg-section-title">Wellness weights <span class="help-icon" data-tip="How much the optimizer values each wellness activity relative to each other. Higher = LP pushes harder to maximise that activity when spare budget is available. Scaled together by the wellness/performance slider.">?</span></div>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Practice <span class="help-icon" data-tip="Base weight for practice in the LP objective, scaled by the sport profile urgency curve and the performance multiplier.">?</span></span>
+        <input type="number" value="${cfg.wellnessWeights.practice}" min="0" max="3" step="0.1" onchange="cfg.wellnessWeights.practice=+this.value;refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Sleep</span>
+        <input type="number" value="${cfg.wellnessWeights.sleep}" min="0" max="3" step="0.1" onchange="cfg.wellnessWeights.sleep=+this.value;refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Meals</span>
+        <input type="number" value="${cfg.wellnessWeights.meals}" min="0" max="3" step="0.1" onchange="cfg.wellnessWeights.meals=+this.value;refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Free time</span>
+        <input type="number" value="${cfg.wellnessWeights.free}" min="0" max="3" step="0.1" onchange="cfg.wellnessWeights.free=+this.value;refresh()">
+      </div>
+
+      <!-- ── Free Time ──────────────────────────────────────── -->
+      <div class="cfg-section full-col">
+        <div class="cfg-section-title">Free Time</div>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Min free time / week <span class="help-icon" data-tip="Minimum total free hours across the week, split evenly across days.">?</span></span>
+        <input type="number" value="${cfg.freeFloor}" min="0" max="40" step="1" onchange="cfg.freeFloor=+this.value;refresh()">
+        <span class="hw-unit">hrs</span>
+      </div>
+      <div class="cfg-row full-col" style="margin-top:4px">
+        <button class="btn-refresh" onclick="refresh()">Recalculate</button>
+      </div>
+
+    </div>`;
+}
+
+function renderGrid() {
+  document.getElementById("day-grid").innerHTML = sched.map((row, i) => {
+    const gc  = row.isGame ? "#ef4444" : row.isPrac ? "#8b5cf6" : "var(--text)";
+    const pracTag = (() => {
+      if (!row.isPrac) return row.dt.replace(/_/g," ");
+      const dtgLbl = cfg.gameDay ? `${Math.max(0,row.dtg)}d to game` : "practice";
+      const durLbl = `${fmtD(row.Practice)}`;
+      const pressLbl = row.pressureSqueeze > 0.05
+        ? `<span style="color:#f59e0b"> ↓tests</span>`
+        : row.lpSqueeze > 0.15
+        ? `<span style="color:#6366f1"> ↓study</span>`
+        : "";
+      return `${dtgLbl} · ${durLbl}${pressLbl}`;
+    })();
+    const tag = row.isGame ? "GAME DAY" : pracTag;
+    return `<div class="day-row ${selDay===i?"sel":""}" onclick="selDayFn(${i})">
+      <div><div class="d-name" style="color:${gc}">${row.dayName}</div><div class="d-date">${row.dateLabel}</div><div class="d-tag">${tag}</div></div>
+      <div class="t-track">${renderBlocks(row)}</div>
+
+    </div>`;
+  }).join("");
+}
+
+function renderAxis() {
+  const marks = [6,8,10,12,14,16,18,20,22].map(h => {
+    const lbl = h < 12 ? h+"am" : h === 12 ? "noon" : (h-12)+"pm";
+    return `<span class="axis-mk" style="left:${toX(h).toFixed(1)}%">${lbl}</span>`;
+  }).join("");
+  document.getElementById("axis-row").innerHTML = `<div></div><div class="axis-trk">${marks}</div><div></div>`;
+}
+
+
+function renderLegend() {
+  document.getElementById("legend").innerHTML = Object.entries(BC).map(([t, c]) =>
+    `<div class="leg-i"><div class="leg-sw" style="background:${c}"></div>${t}</div>`
+  ).join("");
+}
+
+function renderDetail() {
+  const el = document.getElementById("detail");
+  if (selDay === null) { el.innerHTML = ""; return; }
+  const row = sched[selDay];
+  const dtgStr = row.dtg > 0 ? `${row.dtg}d to game` : row.dtg === 0 ? "GAME DAY" : "post-game";
+
+  const chips = row.tl.map(b =>
+    `<div class="chip" style="background:${BC[b.type]}22;color:${BC[b.type]};border:1px solid ${BC[b.type]}44">${b.label} · ${fmtD(b.dur)}</div>`
+  ).join("");
+
+  const studyCards = cfg.subjects.map(s => {
+    const h = row["Study:" + s.name] || 0;
+    if (h <= 0) return "";
+    const testLbl = s.testDays?.length ? `tests: ${s.testDays.map(td=>DAYS[td-1]).join(", ")}` : "no tests";
+    return `<div class="stat-c"><div class="stat-l">${s.name}<br><span style="color:var(--text3)">${testLbl}</span></div><div class="stat-v">${fmtD(h)}</div></div>`;
+  }).join("");
+
+  const tlItems = row.tl.map(b =>
+    `<div class="tl-item" style="background:${BC[b.type]}11">
+      <div class="tl-dot" style="background:${BC[b.type]}"></div>
+      <div class="tl-label">${b.label}</div>
+      <div class="tl-time">${fmtT(b.start)} – ${fmtT(b.start + b.dur)}</div>
+      <div class="tl-dur">${fmtD(b.dur)}</div>
+    </div>`
+  ).join("");
+
+  el.innerHTML = `
+    <div class="det">
+      <div class="det-hdr">
+        <span class="det-title">${row.dayName}, ${row.dateLabel} — ${row.dt.replace(/_/g," ")}</span>
+        <span class="det-sub">wake ${fmtT(row.wake)} · sleep ${fmtD(row.tl[0]?.dur ?? row.Sleep)} · ${dtgStr}</span>
+      </div>
+      <div class="sec-hd">Time blocks</div>
+      <div class="chips">${chips}</div>
+      <div class="sec-hd">Hourly breakdown</div>
+      <div class="tl-list">${tlItems}</div>
+
+      <div class="sec-hd">Performance score</div>
+      <div class="perf-row">
+        <div class="perf-num">${row.perf.toFixed(2)}</div>
+        <div class="perf-sub">urgency-weighted study + practice</div>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// EVENT HANDLERS
+// ═══════════════════════════════════════════════════════════════════════
+function selDayFn(i) {
+  selDay = selDay === i ? null : i;
+  renderGrid();
+  renderDetail();
+}
+function toggleCfg() {
+  cfgOpen = !cfgOpen;
+  document.getElementById("cfg-body").style.display = cfgOpen ? "block" : "none";
+  document.getElementById("cfg-arr").textContent    = cfgOpen ? "▴" : "▾";
+  if (cfgOpen) renderCfg();
+}
+function setWeekdayWake(val) {
+  ["school","friday","practice_weekday","game_weekday"].forEach(k => cfg.wake[k] = val);
+  refresh();
+}
+function setWeekdaySchoolHomework(val) {
+  cfg.homework.school = val; cfg.homework.practice_weekday = val; refresh();
+}
+function setWeekendHomework(val) {
+  ["rest","practice_weekend"].forEach(k => cfg.homework[k] = val); refresh();
+}
+function toggleTestDay(i, day, on) {
+  const td = cfg.subjects[i].testDays || [];
+  cfg.subjects[i].testDays = on
+    ? [...td.filter(d=>d!==day), day].sort((a,b)=>a-b)
+    : td.filter(d => d !== day);
+  refresh();
+}
+function addSubj() {
+  cfg.subjects.push({ name:"New subject", testDays:[], weight:1.0, preTestFloor:0, postTestMax:0.1 });
+  refresh();
+}
+function removeSubj(i) {
+  cfg.subjects.splice(i, 1);
+  refresh();
+}
+function togglePD(n, on) {
+  cfg.practiceDays = on
+    ? [...cfg.practiceDays.filter(x=>x!==n), n].sort()
+    : cfg.practiceDays.filter(x => x !== n);
+  refresh();
+}
+function updSubj(i, key, val) {
+  if (key === 'weight') val = clamp(+val, 0.1, 5);
+  cfg.subjects[i][key] = val;
+  refresh();
+}
+function setPerfAlpha(val) {
+  perfAlpha = val;
+  const readout = document.getElementById("tradeoff-readout");
+  if (readout) {
+    const label = val < 0.2  ? "max recovery"
+                : val < 0.4  ? "recovery focus"
+                : val < 0.6  ? "balanced"
+                : val < 0.8  ? "performance focus"
+                :              "max performance";
+    readout.textContent = label;
+    readout.style.color = val < 0.4 ? "#0ea5e9" : val > 0.6 ? "#8b5cf6" : "var(--text2)";
+  }
+  const inp2 = document.getElementById("perf-alpha-input");
+  if (inp2) inp2.value = val;
+  refresh();
+}
+// urgency slider: 0–1 normalized → actual range [0.5, 6]
+const URGENCY_MIN = 0.5, URGENCY_MAX = 6;
+function urgencyFromSlider(t) { return r2(URGENCY_MIN + t * (URGENCY_MAX - URGENCY_MIN)); }
+function urgencyToSlider(v)   { return r2((v - URGENCY_MIN) / (URGENCY_MAX - URGENCY_MIN)); }
+
+function setUrgencyScale(t) {
+  const val = urgencyFromSlider(t);
+  cfg.urgencyScale = val;
+  const readout = document.getElementById("urgency-readout");
+  if (readout) {
+    const label = t < 0.2  ? "very light"
+                : t < 0.4  ? "light"
+                : t < 0.6  ? "moderate"
+                : t < 0.8  ? "heavy"
+                :             "max cramming";
+    readout.textContent = label;
+    readout.style.color = t < 0.4 ? "#22c55e" : t > 0.6 ? "#ef4444" : "var(--text2)";
+  }
+  const inp = document.getElementById("urgency-scale-input");
+  if (inp) inp.value = val;
+  refresh();
+}
+// AP slider: 0–1 normalized → actual range [0.5, 5]
+const AP_MIN = 0.5, AP_MAX = 5;
+function apFromSlider(t) { return r2(AP_MIN + t * (AP_MAX - AP_MIN)); }
+function apToSlider(v)   { return r2((v - AP_MIN) / (AP_MAX - AP_MIN)); }
+
+function setAcadPressure(t) {
+  const val = apFromSlider(t);
+  cfg.academicPressureThreshold = val;
+  const readout = document.getElementById("ap-readout");
+  if (readout) {
+    const label = t < 0.2  ? "tests cut practice hard"
+                : t < 0.4  ? "tests cut practice"
+                : t < 0.6  ? "balanced"
+                : t < 0.8  ? "practice focus"
+                :             "practice protected";
+    readout.textContent = label;
+    readout.style.color = t < 0.4 ? "#f59e0b" : t > 0.6 ? "#8b5cf6" : "var(--text2)";
+  }
+  const inp = document.getElementById("ap-threshold-input");
+  if (inp) inp.value = val;
+  refresh();
+}
+async function saveSchedule() {
+  const days = sched.map(row => {
+    const { _studyPlaced, ...day } = row;
+    return { ...day, date: formatScheduleDate(row.n) };
+  });
+  const snapshot = {
+    format: 'athlete-schedule',
+    version: 1,
+    createdAt: new Date().toISOString(),
+    weekStart: weekStartDate,
+    performanceBalance: perfAlpha,
+    config: JSON.parse(JSON.stringify(cfg)),
+    days
+  };
+  const filename = `athlete_schedule_${weekStartDate}.json`;
+  const file = new File([JSON.stringify(snapshot, null, 2)], filename, { type: 'application/json' });
+
+  try {
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ title: 'Athlete schedule', files: [file] });
+      return;
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+  }
+
+  const url = URL.createObjectURL(file);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+async function loadScheduleFile(file) {
+  if (!file) return;
+  const status = document.getElementById('schedule-file-status');
+  try {
+    const snapshot = JSON.parse(await file.text());
+    if (snapshot.format !== 'athlete-schedule' || snapshot.version !== 1 || !snapshot.config || !snapshot.weekStart) {
+      throw new Error('This is not an Athlete Scheduler schedule file.');
+    }
+    const weekDate = parseLocalDate(snapshot.weekStart);
+    if (Number.isNaN(weekDate.getTime())) throw new Error('The schedule file has an invalid week date.');
+    if (!Array.isArray(snapshot.config.subjects)) throw new Error('The schedule file has invalid settings.');
+
+    cfg = snapshot.config;
+    perfAlpha = Number(snapshot.performanceBalance);
+    if (!Number.isFinite(perfAlpha)) perfAlpha = 0.5;
+    perfAlpha = clamp(perfAlpha, 0, 1);
+    weekStartDate = snapshot.weekStart;
+    localStorage.setItem('scheduleOptimizer.weekStartDate', weekStartDate);
+    const input = document.getElementById('schedule-week-start');
+    if (input) input.value = weekStartDate;
+    refresh();
+    if (status) status.textContent = `Loaded ${file.name}`;
+  } catch (error) {
+    if (status) status.textContent = error.message || 'Could not load schedule.';
+  }
+}
+function refresh() {
+  compute();
+  renderSummary();
+  renderGrid();
+  if (cfgOpen) renderCfg();
+  if (selDay !== null) renderDetail();
+}
+
+// tooltip
+document.addEventListener("mouseover", e => {
+  const t = e.target.closest("[data-tip]");
+  if (t) {
+    const tip = document.getElementById("tip");
+    tip.textContent = t.dataset.tip;
+    tip.style.display = "block";
+    tip.style.left = Math.min(e.clientX + 14, window.innerWidth - 280) + "px";
+    tip.style.top  = (e.clientY - 50) + "px";
+  }
+});
+document.addEventListener("mouseout", e => {
+  if (e.target.closest("[data-tip]")) document.getElementById("tip").style.display = "none";
+});
+document.getElementById("cfg-hdr").addEventListener("click", toggleCfg);
+
+// ═══════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════
+// Seed study floor defaults from subjects
+// Sanitise: no weekend test days
+cfg.subjects.forEach(s => { s.testDays = (s.testDays||[]).filter(d => d <= 5); });
+
+compute();
+renderSummary();
+renderGrid();
+renderAxis();
+renderLegend();
+const weekStartInput = document.getElementById('schedule-week-start');
+if (weekStartInput) weekStartInput.value = weekStartDate;
+// Initialise slider readouts from current cfg values
+setAcadPressure(apToSlider(cfg.academicPressureThreshold));
+const apSlider = document.getElementById("ap-slider");
+if (apSlider) apSlider.value = apToSlider(cfg.academicPressureThreshold);
+setUrgencyScale(urgencyToSlider(cfg.urgencyScale));
+const urgSlider = document.getElementById("urgency-slider");
+if (urgSlider) urgSlider.value = urgencyToSlider(cfg.urgencyScale);
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// STRESS TAB — imports the iPhone Shortcut's Health-sample text export
+// (Health app share-sheet format, one line per reading) and computes the
+// stress index entirely client-side; no notebook round-trip. Parsing and
+// aggregation mirror parse_shortcuts_exports/build_daily in
+// health_export_xml.ipynb, deliberately scoped to the same fields
+// composite_stress_index reads there (hrv, rhr, resp_rate, sleep stages) --
+// that notebook is still where the deeper offline analysis (trend
+// decomposition, richer stats) lives.
+// ═══════════════════════════════════════════════════════════════════════
+
+const sTooltip = document.getElementById('s-tooltip');
+
+// ---------- parsing the Health-app text export ----------
+// Present in the export but not read by the stress score -- skip deliberately, not silently.
+const IGNORED_TYPES = new Set(['VO2 Max']);
+const STRESS_TYPE_MAP = { 'Resting Heart Rate': 'rhr', 'Respiratory Rate': 'resp', 'Heart Rate Variability': 'hrv' };
+// Core/REM/"Asleep" all count toward total sleep; Deep counts toward both total and deep;
+// "In Bed" is known but excluded (not part of any staged total) -- null distinguishes that
+// from an unrecognized stage name (undefined), which gets reported instead of silently dropped.
+const SLEEP_STAGE_MAP = { 'Core':'asleep', 'Deep':'deep', 'REM':'asleep', 'Awake':'awake', 'In Bed':null, 'Asleep':'asleep' };
+const MAX_STAGE_GAP_MS = 3 * 60 * 60 * 1000; // beyond this, treat consecutive Sleep rows as different nights
+const SM_MONTHS = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+
+// Parses "Aug 31, 2026 at 8:59 AM" as a naive local timestamp -- no Date.parse/timezone
+// guessing, matching the notebook's treatment of these as wall-clock phone-local times.
+function parseShortcutsDateTime(datePart, timePart) {
+  const dm = datePart.match(/^(\w{3})\s+(\d{1,2})$/);
+  const tm = timePart.match(/^(\d{4})\s+at\s+(\d{1,2}):(\d{2})\s+(AM|PM)$/);
+  if (!dm || !tm) return null;
+  const month = SM_MONTHS[dm[1]];
+  if (month === undefined) return null;
+  let h = Number(tm[2]) % 12;
+  if (tm[4] === 'PM') h += 12;
+  return new Date(Number(tm[1]), month, Number(dm[2]), h, Number(tm[3]));
+}
+
+function parseShortcutsExports(fileTexts) {
+  const rows = [];
+  const unmapped = new Map();
+  const ignored = new Map();
+  const bump = (map, k) => map.set(k, (map.get(k) || 0) + 1);
+
+  fileTexts.forEach(text => {
+    text.split(/\r?\n/).forEach(raw => {
+      const line = raw.trim();
+      if (!line) return;
+      const parts = line.split(', ');
+      if (parts.length !== 6) { bump(unmapped, `unparsed line: ${line.slice(0,60)}`); return; }
+      const [datePart, timePart, typeLabel, valueField] = parts;
+      if (IGNORED_TYPES.has(typeLabel)) { bump(ignored, typeLabel); return; }
+      const dt = parseShortcutsDateTime(datePart, timePart);
+      if (!dt) { bump(unmapped, `unparsed date "${datePart}, ${timePart}"`); return; }
+
+      if (typeLabel === 'Sleep') {
+        const stage = SLEEP_STAGE_MAP[valueField];
+        if (stage === undefined) { bump(unmapped, `Sleep/${valueField}`); return; }
+        if (stage === null) return; // In Bed -- known, deliberately excluded
+        rows.push({ type: 'sleep', stage, start: dt });
+        return;
+      }
+      const key = STRESS_TYPE_MAP[typeLabel];
+      if (!key) { bump(unmapped, typeLabel); return; }
+      const m = valueField.match(/-?\d+\.?\d*/);
+      if (!m) { bump(unmapped, `${typeLabel}/unparseable value "${valueField}"`); return; }
+      rows.push({ type: key, start: dt, value: Number(m[0]) });
+    });
+  });
+
+  return { rows, unmapped, ignored };
+}
+
+// ---------- aggregating to one row per day ----------
+function sDateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+function buildDaily(rows) {
+  const byDay = new Map();
+  const dayOf = key => { if (!byDay.has(key)) byDay.set(key, { hrv:[], resp:[], rhr:[], sleep_deep:0, sleep_asleep:0, sleep_awake:0 }); return byDay.get(key); };
+
+  rows.filter(r => r.type === 'hrv' || r.type === 'resp' || r.type === 'rhr')
+    .forEach(r => dayOf(sDateKey(r.start))[r.type].push(r.value));
+
+  // Sleep stages are transition points, not intervals: each stage runs until the *next*
+  // Sleep row's timestamp (any stage), capped by MAX_STAGE_GAP so a gap between two
+  // different nights doesn't get counted as one giant stage. Bucketed to the night it
+  // started (start - 12h, floored to a date) -- same convention as build_daily in
+  // health_export_xml.ipynb.
+  const sleepRows = rows.filter(r => r.type === 'sleep').sort((a,b) => a.start - b.start);
+  sleepRows.forEach((r, i) => {
+    const next = sleepRows[i+1];
+    if (!next) return;
+    const gapMs = next.start - r.start;
+    if (gapMs <= 0 || gapMs > MAX_STAGE_GAP_MS) return;
+    const night = new Date(r.start.getTime() - 12*60*60*1000);
+    const day = dayOf(sDateKey(night));
+    const hours = gapMs / 3600000;
+    if (r.stage === 'deep') { day.sleep_deep += hours; day.sleep_asleep += hours; }
+    else if (r.stage === 'asleep') { day.sleep_asleep += hours; }
+    else if (r.stage === 'awake') { day.sleep_awake += hours; }
+  });
+
+  return [...byDay.keys()].sort().map(key => {
+    const d = byDay.get(key);
+    const sleep = d.sleep_asleep > 0 ? d.sleep_asleep : null;
+    return {
+      date: key,
+      hrv: sAvg(d.hrv), resp: sAvg(d.resp), rhr: sAvg(d.rhr),
+      sleep, deepPct: sleep ? (d.sleep_deep / sleep) * 100 : null,
+      awake: sleep !== null || d.sleep_awake > 0 ? d.sleep_awake : null,
+    };
+  });
+}
+
+// ---------- composite stress index ----------
+// Same six-term unweighted z-score blend as composite_stress_index in stress.ipynb: low HRV,
+// high RHR, high resp rate, short sleep, low deep-sleep share, and more time awake during the
+// sleep session all push the index up (more stressed). `stats` is an optional {metric:{mean,
+// std}} map (see sBaseline below) -- with none, each metric is scored against this dataset's
+// own mean/std (0 = this batch's own average).
+const STRESS_METRICS = ['hrv','rhr','resp','sleep','deepPct','awake'];
+const STRESS_SIGN = { hrv:-1, rhr:1, resp:1, sleep:-1, deepPct:-1, awake:1 };
+
+function sAvg(arr) { const v = arr.filter(x=>x!==null&&x!==undefined&&!Number.isNaN(x)); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; }
+
+function meanStd(values) {
+  const v = values.filter(x => x !== null && x !== undefined && !Number.isNaN(x));
+  if (v.length < 2) return null;
+  const mean = v.reduce((a,b)=>a+b,0) / v.length;
+  const variance = v.reduce((a,b)=>a+(b-mean)**2,0) / (v.length - 1);
+  return { mean, std: Math.sqrt(variance) };
+}
+
+function computeStats(days) {
+  const stats = {};
+  STRESS_METRICS.forEach(m => { const s = meanStd(days.map(d => d[m])); if (s) stats[m] = s; });
+  return stats;
+}
+
+function compositeStressIndex(days, statsOverride) {
+  const stats = statsOverride || computeStats(days);
+  return days.map(d => {
+    const zs = [];
+    STRESS_METRICS.forEach(m => {
+      const s = stats[m];
+      if (!s || s.std === 0 || d[m] === null || d[m] === undefined) return;
+      zs.push(STRESS_SIGN[m] * (d[m] - s.mean) / s.std);
+    });
+    return zs.length ? zs.reduce((a,b)=>a+b,0) / zs.length : null;
+  });
+}
+
+// ---------- baseline (user-driven, persisted across reloads) ----------
+const BASELINE_KEY = 'scheduleOptimizer.stressBaseline';
+let sBaseline = null;
+try {
+  const saved = localStorage.getItem(BASELINE_KEY);
+  if (saved) sBaseline = JSON.parse(saved);
+} catch (e) { sBaseline = null; }
+
+function setBaseline(days) {
+  sBaseline = { stats: computeStats(days), range: days.length ? `${sShort(days[0].date)}–${sShort(days[days.length-1].date)}` : '', n: days.length };
+  try { localStorage.setItem(BASELINE_KEY, JSON.stringify(sBaseline)); } catch (e) {}
+}
+function clearBaseline() {
+  sBaseline = null;
+  try { localStorage.removeItem(BASELINE_KEY); } catch (e) {}
+}
+
+function sFmt(n, d=1) { return n === null || n === undefined ? '—' : Number(n).toFixed(d); }
+
+function sShort(dateStr) {
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return names[m-1] + ' ' + d;
+}
+
+// ---------- generic line chart ----------
+function sLineChart(containerId, opts) {
+  const { data, yKey, color, unit, decimals=1, height=170, tickEvery=5, showXAxis=true } = opts;
+  const W = 560, H = height, padL = 40, padR = 12, padT = 14, padB = showXAxis ? 22 : 6;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  const pts = data.map((d,i) => ({ i, x: d.date, y: d[yKey] }));
+  const valid = pts.filter(p => p.y !== null && p.y !== undefined);
+  const yMin = Math.min(...valid.map(p=>p.y));
+  const yMax = Math.max(...valid.map(p=>p.y));
+  const pad = (yMax - yMin) * 0.15 || 1;
+  const y0 = yMin - pad, y1 = yMax + pad;
+
+  const xFor = i => padL + (i / (data.length - 1)) * plotW;
+  const yFor = v => padT + plotH - ((v - y0) / (y1 - y0)) * plotH;
+
+  let segs = [], cur = [];
+  pts.forEach(p => {
+    if (p.y === null || p.y === undefined) { if (cur.length) { segs.push(cur); cur = []; } }
+    else cur.push(p);
+  });
+  if (cur.length) segs.push(cur);
+
+  const pathD = segs.map(seg => 'M' + seg.map(p => `${xFor(p.i)},${yFor(p.y)}`).join('L')).join(' ');
+  // A segment with only one point (no neighbor with data on either side) draws as a bare
+  // "M x,y" with no "L" -- an invisible zero-length path. Mark it with a dot so isolated
+  // readings (e.g. sparse VO2max estimates) don't silently disappear from the chart.
+  const isolatedDots = segs.filter(seg => seg.length === 1)
+    .map(seg => `<circle cx="${xFor(seg[0].i)}" cy="${yFor(seg[0].y)}" r="3" fill="${color}" stroke="var(--bg2)" stroke-width="1.5"/>`)
+    .join('');
+
+  const yTicks = 4;
+  let gridSvg = '';
+  for (let t=0; t<=yTicks; t++) {
+    const v = y0 + (t/yTicks)*(y1-y0);
+    const yy = yFor(v);
+    gridSvg += `<line class="s-gridline" x1="${padL}" x2="${W-padR}" y1="${yy}" y2="${yy}"/>`;
+    gridSvg += `<text class="s-axis-label" x="${padL-6}" y="${yy+3}" text-anchor="end">${v.toFixed(decimals)}</text>`;
+  }
+
+  let xLabels = '';
+  if (showXAxis) {
+    data.forEach((d,i) => {
+      if (i % tickEvery === 0 || i === data.length-1) {
+        xLabels += `<text class="s-axis-label" x="${xFor(i)}" y="${H-4}" text-anchor="middle">${sShort(d.date)}</text>`;
+      }
+    });
+  }
+
+  const lastValid = valid[valid.length-1];
+  const endLabel = lastValid ? `<circle cx="${xFor(lastValid.i)}" cy="${yFor(lastValid.y)}" r="4" fill="${color}" stroke="var(--bg2)" stroke-width="2"/>` : '';
+  const panelLabel = opts.label ? `<text class="s-panel-label" x="${padL+6}" y="${padT+9}">${opts.label}${unit ? ` (${unit})` : ''}</text>` : '';
+
+  const svg = `
+  <svg class="chart" viewBox="0 0 ${W} ${H}" id="${containerId}-svg">
+    ${gridSvg}
+    <line class="s-axis-baseline" x1="${padL}" x2="${W-padR}" y1="${padT+plotH}" y2="${padT+plotH}"/>
+    <path d="${pathD}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${isolatedDots}
+    ${endLabel}
+    ${panelLabel}
+    ${xLabels}
+    <line class="s-crosshair" id="${containerId}-cross" x1="0" x2="0" y1="${padT}" y2="${padT+plotH}"/>
+    <circle class="s-hover-dot" id="${containerId}-dot" r="5" fill="${color}" stroke="var(--bg2)" stroke-width="2"/>
+    <rect class="s-hit-rect" x="${padL}" y="${padT}" width="${plotW}" height="${plotH}"/>
+  </svg>`;
+
+  const el = document.getElementById(containerId);
+  el.innerHTML = svg;
+  const svgEl = document.getElementById(containerId+'-svg');
+  const cross = document.getElementById(containerId+'-cross');
+  const dot = document.getElementById(containerId+'-dot');
+
+  function handleMove(clientX, clientY) {
+    const rect = svgEl.getBoundingClientRect();
+    const relX = (clientX - rect.left) / rect.width * W;
+    let idx = Math.round((relX - padL) / plotW * (data.length-1));
+    idx = Math.max(0, Math.min(data.length-1, idx));
+    const d = data[idx];
+    const val = d[yKey];
+    cross.setAttribute('x1', xFor(idx)); cross.setAttribute('x2', xFor(idx)); cross.style.opacity = 1;
+    if (val !== null && val !== undefined) {
+      dot.setAttribute('cx', xFor(idx)); dot.setAttribute('cy', yFor(val)); dot.style.opacity = 1;
+    } else { dot.style.opacity = 0; }
+
+    sTooltip.innerHTML = '';
+    const dateEl = document.createElement('div'); dateEl.className='s-t-date'; dateEl.textContent = d.date;
+    sTooltip.appendChild(dateEl);
+    const row = document.createElement('div'); row.className='s-t-row';
+    const key = document.createElement('span'); key.className='s-t-key'; key.style.background = color;
+    const name = document.createElement('span'); name.className='s-t-name'; name.textContent = opts.label;
+    const valSpan = document.createElement('span'); valSpan.className='s-t-val';
+    valSpan.textContent = (val===null||val===undefined) ? 'no data' : sFmt(val, decimals) + (unit?(' '+unit):'');
+    row.appendChild(key); row.appendChild(name); row.appendChild(valSpan);
+    sTooltip.appendChild(row);
+
+    sTooltip.style.left = clientX + 'px';
+    sTooltip.style.top = clientY + window.scrollY + 'px';
+    sTooltip.style.opacity = 1;
+  }
+  svgEl.addEventListener('pointermove', e => handleMove(e.clientX, e.clientY));
+  svgEl.addEventListener('pointerleave', () => { cross.style.opacity=0; dot.style.opacity=0; sTooltip.style.opacity=0; });
+}
+
+// ---------- bar chart (single hue, magnitude) ----------
+function sBarChart(containerId, opts) {
+  const { data, yKey, color, unit, decimals=0, height=170, tickEvery=5, showXAxis=true } = opts;
+  const W = 560, H = height, padL = 40, padR = 12, padT = 14, padB = showXAxis ? 22 : 6;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const n = data.length;
+  const bw = Math.min(24, plotW/n * 0.6);
+  const step = plotW / n;
+
+  const vals = data.map(d=>d[yKey]).filter(v=>v!==null && v!==undefined);
+  const yMax = Math.max(...vals) * 1.1;
+  const yFor = v => padT + plotH - (v/yMax)*plotH;
+  const xFor = i => padL + step*i + step/2;
+
+  let bars = '';
+  data.forEach((d,i) => {
+    const v = d[yKey];
+    if (v === null || v === undefined) return;
+    const x = xFor(i) - bw/2;
+    const yTop = yFor(v);
+    const h = (padT+plotH) - yTop;
+    bars += `<rect class="bar" data-i="${i}" x="${x}" y="${yTop}" width="${bw}" height="${Math.max(h,1)}" rx="3" fill="${color}"/>`;
+  });
+
+  const yTicks = 3;
+  let gridSvg = '';
+  for (let t=0; t<=yTicks; t++) {
+    const v = (t/yTicks)*yMax;
+    const yy = yFor(v);
+    gridSvg += `<line class="s-gridline" x1="${padL}" x2="${W-padR}" y1="${yy}" y2="${yy}"/>`;
+    gridSvg += `<text class="s-axis-label" x="${padL-6}" y="${yy+3}" text-anchor="end">${v.toFixed(decimals)}</text>`;
+  }
+  let xLabels = '';
+  if (showXAxis) {
+    data.forEach((d,i) => {
+      if (i % tickEvery === 0 || i === n-1) {
+        xLabels += `<text class="s-axis-label" x="${xFor(i)}" y="${H-4}" text-anchor="middle">${sShort(d.date)}</text>`;
+      }
+    });
+  }
+
+  const panelLabel = opts.label ? `<text class="s-panel-label" x="${padL+6}" y="${padT+9}">${opts.label}${unit ? ` (${unit})` : ''}</text>` : '';
+
+  const svg = `
+  <svg class="chart" viewBox="0 0 ${W} ${H}" id="${containerId}-svg">
+    ${gridSvg}
+    <line class="s-axis-baseline" x1="${padL}" x2="${W-padR}" y1="${padT+plotH}" y2="${padT+plotH}"/>
+    ${bars}
+    ${panelLabel}
+    ${xLabels}
+  </svg>`;
+  const el = document.getElementById(containerId);
+  el.innerHTML = svg;
+  const svgEl = document.getElementById(containerId+'-svg');
+
+  svgEl.querySelectorAll('.bar').forEach(rect => {
+    rect.addEventListener('pointermove', e => {
+      const i = +rect.dataset.i;
+      const d = data[i];
+      rect.style.opacity = 0.8;
+      sTooltip.innerHTML = '';
+      const dateEl = document.createElement('div'); dateEl.className='s-t-date'; dateEl.textContent = d.date;
+      sTooltip.appendChild(dateEl);
+      const row = document.createElement('div'); row.className='s-t-row';
+      const key = document.createElement('span'); key.className='s-t-key'; key.style.background = color;
+      const name = document.createElement('span'); name.className='s-t-name'; name.textContent = opts.label;
+      const valSpan = document.createElement('span'); valSpan.className='s-t-val';
+      valSpan.textContent = sFmt(d[yKey], decimals) + (unit?(' '+unit):'');
+      row.appendChild(key); row.appendChild(name); row.appendChild(valSpan);
+      sTooltip.appendChild(row);
+      sTooltip.style.left = e.clientX + 'px';
+      sTooltip.style.top = (e.clientY + window.scrollY) + 'px';
+      sTooltip.style.opacity = 1;
+    });
+    rect.addEventListener('pointerleave', () => { rect.style.opacity = 1; sTooltip.style.opacity = 0; });
+  });
+}
+
+// ---------- diverging bar chart (stress index) ----------
+function sDivergingChart(containerId, opts) {
+  const { data, yKey, height=170, tickEvery=5, annotations=[], baselineCount=null, showXAxis=true } = opts;
+  const W = 560, H = height, padL = 40, padR = 12, padT = 14, padB = showXAxis ? 22 : 6;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const n = data.length;
+  const step = plotW / n;
+  const bw = Math.min(20, step*0.6);
+
+  const vals = data.map(d=>d[yKey]);
+  const maxAbs = Math.max(...vals.map(v=>Math.abs(v))) * 1.15;
+  const yFor = v => padT + plotH/2 - (v/maxAbs)*(plotH/2);
+  const xFor = i => padL + step*i + step/2;
+  const zeroY = yFor(0);
+
+  let bars = '';
+  data.forEach((d,i) => {
+    const v = d[yKey];
+    const isPos = v >= 0;
+    const yTop = isPos ? yFor(v) : zeroY;
+    const h = Math.max(Math.abs(yFor(v) - zeroY), 1);
+    const color = isPos ? 'var(--s-8)' : 'var(--s-1)';
+    const beyondBaseline = baselineCount !== null && i >= baselineCount;
+    const fillOpacity = beyondBaseline ? '0.35' : '1';
+    const stroke = beyondBaseline ? `stroke="${color}" stroke-width="1.5" stroke-dasharray="2,2"` : '';
+    bars += `<rect class="bar" data-i="${i}" x="${xFor(i)-bw/2}" y="${yTop}" width="${bw}" height="${h}" rx="2" fill="${color}" fill-opacity="${fillOpacity}" ${stroke}/>`;
+  });
+
+  let splitLine = '';
+  if (baselineCount !== null && baselineCount < n) {
+    const sx = padL + step*baselineCount;
+    splitLine = `<line x1="${sx}" x2="${sx}" y1="${padT}" y2="${padT+plotH}" stroke="var(--text3)" stroke-width="1"/>`;
+  }
+
+  const yTicks = [-2,-1,0,1,2].filter(t => Math.abs(t) <= maxAbs+0.01);
+  let gridSvg = '';
+  yTicks.forEach(t => {
+    const yy = yFor(t);
+    gridSvg += `<line class="s-gridline" x1="${padL}" x2="${W-padR}" y1="${yy}" y2="${yy}"/>`;
+    gridSvg += `<text class="s-axis-label" x="${padL-6}" y="${yy+3}" text-anchor="end">${t}</text>`;
+  });
+
+  let xLabels = '';
+  if (showXAxis) {
+    data.forEach((d,i) => {
+      if (i % tickEvery === 0 || i === n-1) {
+        xLabels += `<text class="s-axis-label" x="${xFor(i)}" y="${H-4}" text-anchor="middle">${sShort(d.date)}</text>`;
+      }
+    });
+  }
+
+  let markers = '';
+  const markerColor = 'var(--s-7)';
+  annotations.forEach((ann, k) => {
+    const idx = data.findIndex(d => d.date === ann.date);
+    if (idx === -1) return;
+    const mx = xFor(idx);
+    markers += `<line x1="${mx}" x2="${mx}" y1="${padT}" y2="${padT+plotH}" stroke="${markerColor}" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.75"/>`;
+    markers += `<circle cx="${mx}" cy="${padT}" r="7" fill="${markerColor}"/>`;
+    markers += `<text x="${mx}" y="${padT+3.5}" text-anchor="middle" font-size="9" font-weight="700" fill="#ffffff">${k+1}</text>`;
+  });
+
+  const panelLabel = opts.label ? `<text class="s-panel-label" x="${W-padR-2}" y="${padT+9}" text-anchor="end">${opts.label}</text>` : '';
+
+  const svg = `
+  <svg class="chart" viewBox="0 0 ${W} ${H}" id="${containerId}-svg">
+    ${gridSvg}
+    <line class="s-axis-baseline" x1="${padL}" x2="${W-padR}" y1="${zeroY}" y2="${zeroY}"/>
+    ${panelLabel}
+    ${bars}
+    ${splitLine}
+    ${markers}
+    ${xLabels}
+  </svg>`;
+  const el = document.getElementById(containerId);
+  el.innerHTML = svg;
+  const svgEl = document.getElementById(containerId+'-svg');
+
+  if (annotations.length) {
+    const legend = document.createElement('div');
+    legend.className = 's-legend';
+    legend.style.marginTop = '6px';
+    annotations.forEach((ann, k) => {
+      const item = document.createElement('div'); item.className = 's-legend-item';
+      const badge = document.createElement('span');
+      badge.textContent = k+1;
+      badge.style.cssText = `display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:${markerColor};color:#fff;font-size:9px;font-weight:700;flex:none;`;
+      const label = document.createElement('span'); label.textContent = `${sShort(ann.date)} — ${ann.label}`;
+      item.appendChild(badge); item.appendChild(label);
+      legend.appendChild(item);
+    });
+    el.appendChild(legend);
+  }
+
+  svgEl.querySelectorAll('.bar').forEach(rect => {
+    rect.addEventListener('pointermove', e => {
+      const i = +rect.dataset.i;
+      const d = data[i];
+      rect.style.opacity = 0.8;
+      sTooltip.innerHTML = '';
+      const dateEl = document.createElement('div'); dateEl.className='s-t-date'; dateEl.textContent = d.date;
+      sTooltip.appendChild(dateEl);
+      const row = document.createElement('div'); row.className='s-t-row';
+      const key = document.createElement('span'); key.className='s-t-key';
+      key.style.background = d[yKey] >= 0 ? 'var(--s-8)' : 'var(--s-1)';
+      const name = document.createElement('span'); name.className='s-t-name'; name.textContent = 'Stress index';
+      const valSpan = document.createElement('span'); valSpan.className='s-t-val';
+      valSpan.textContent = (d[yKey]>=0?'+':'') + sFmt(d[yKey], 2);
+      row.appendChild(key); row.appendChild(name); row.appendChild(valSpan);
+      sTooltip.appendChild(row);
+      sTooltip.style.left = e.clientX + 'px';
+      sTooltip.style.top = (e.clientY + window.scrollY) + 'px';
+      sTooltip.style.opacity = 1;
+    });
+    rect.addEventListener('pointerleave', () => { rect.style.opacity = 1; sTooltip.style.opacity = 0; });
+  });
+}
+
+// ---------- import + render orchestration ----------
+let sDaily = [];
+let sImportedFiles = [];
+
+function scoreDaily(days) {
+  const vals = compositeStressIndex(days, sBaseline ? sBaseline.stats : null);
+  return days.map((d,i) => ({ ...d, stress: vals[i] }));
+}
+
+function sAddLi(el, html) { const li = document.createElement('li'); li.innerHTML = html; el.appendChild(li); }
+
+function renderStress() {
+  const hasData = sDaily.length > 0;
+  document.getElementById('s-empty').style.display = hasData ? 'none' : '';
+  document.getElementById('s-content').style.display = hasData ? '' : 'none';
+  document.getElementById('s-baseline-row').style.display = hasData ? '' : 'none';
+  document.getElementById('s-baseline-clear-btn').style.display = sBaseline ? '' : 'none';
+  if (!hasData) return;
+
+  const scored = scoreDaily(sDaily);
+  const withStress = scored.filter(d => d.stress !== null);
+  const mostStressed = withStress.length ? withStress.reduce((a,b) => b.stress > a.stress ? b : a) : null;
+  const mostRecovered = withStress.length ? withStress.reduce((a,b) => b.stress < a.stress ? b : a) : null;
+
+  // ---- tiles ----
+  const tiles = [
+    { label: 'Days analyzed', value: scored.length, delta: `${sShort(scored[0].date)} – ${sShort(scored[scored.length-1].date)}` },
+    { label: 'Avg HRV', value: sFmt(sAvg(scored.map(d=>d.hrv)),1)+' ms' },
+    { label: 'Avg resting HR', value: sFmt(sAvg(scored.map(d=>d.rhr)),0)+' bpm' },
+    { label: 'Avg sleep', value: sFmt(sAvg(scored.map(d=>d.sleep)),1)+' h' },
+    { label: 'Most stressed day', value: mostStressed ? sShort(mostStressed.date) : '—', delta: mostStressed ? (mostStressed.stress>=0?'+':'')+sFmt(mostStressed.stress,2) : null },
+  ];
+  const sTilesEl = document.getElementById('s-tiles');
+  sTilesEl.innerHTML = '';
+  tiles.forEach(t => {
+    const div = document.createElement('div'); div.className = 's-tile';
+    const l = document.createElement('div'); l.className='s-label'; l.textContent = t.label;
+    const v = document.createElement('div'); v.className='s-value'; v.textContent = t.value;
+    div.appendChild(l); div.appendChild(v);
+    if (t.delta) { const d = document.createElement('div'); d.className='s-delta s-muted'; d.textContent = t.delta; div.appendChild(d); }
+    sTilesEl.appendChild(div);
+  });
+
+  // ---- charts ----
+  sLineChart('s-chart-hrv', { data: scored, yKey:'hrv', color:'var(--s-1)', label:'HRV', unit:'ms', decimals:1, tickEvery:7, showXAxis:false, height:72 });
+  sLineChart('s-chart-rhr', { data: scored, yKey:'rhr', color:'var(--s-2)', label:'Resting HR', unit:'bpm', decimals:0, tickEvery:7, showXAxis:false, height:72 });
+  sBarChart('s-chart-sleep', { data: scored, yKey:'sleep', color:'var(--s-3)', label:'Sleep', unit:'h', decimals:1, tickEvery:7, showXAxis:false, height:72 });
+  sBarChart('s-chart-deeppct', { data: scored, yKey:'deepPct', color:'var(--s-3)', label:'Deep sleep', unit:'%', decimals:0, tickEvery:7, showXAxis:false, height:72 });
+  sDivergingChart('s-chart-stress', { data: scored, yKey:'stress', tickEvery:5, label:'Stress index', height:100 });
+
+  document.getElementById('s-chart-sub').textContent = sBaseline
+    ? `Five panels on one shared time axis. Stress index is scored against the saved baseline (${sBaseline.range}, ${sBaseline.n} days) — 0 = that baseline's average.`
+    : `Five panels on one shared time axis. Stress index is scored against this import's own average (0 = this batch's mean) — click "Set as baseline" to freeze a fixed reference for future imports.`;
+
+  // ---- summary / caveats (computed, not hand-written -- generalizes to whatever's imported) ----
+  const summaryEl = document.getElementById('s-summary-list');
+  summaryEl.innerHTML = '';
+  if (mostStressed) sAddLi(summaryEl, `<b>Most stressed day: ${sShort(mostStressed.date)}</b> (${mostStressed.stress>=0?'+':''}${sFmt(mostStressed.stress,2)}).`);
+  if (mostRecovered) sAddLi(summaryEl, `<b>Most recovered day: ${sShort(mostRecovered.date)}</b> (${sFmt(mostRecovered.stress,2)}).`);
+  const hrvStat = meanStd(scored.map(d=>d.hrv)), rhrStat = meanStd(scored.map(d=>d.rhr));
+  if (hrvStat) sAddLi(summaryEl, `Avg HRV ${sFmt(hrvStat.mean,1)} ms (±${sFmt(hrvStat.std,1)}), avg resting HR ${rhrStat?sFmt(rhrStat.mean,0):'—'} bpm.`);
+
+  const caveatsEl = document.getElementById('s-caveats-list');
+  caveatsEl.innerHTML = '';
+  if (scored.length < 5) sAddLi(caveatsEl, `Only ${scored.length} day${scored.length===1?'':'s'} imported — mean/std (and the stress index built from them) get more reliable with more days.`);
+  const missing = STRESS_METRICS.filter(m => scored.some(d => d[m]===null));
+  if (missing.length) sAddLi(caveatsEl, `Some days are missing ${missing.join(', ')} — their stress index leans more on whatever fields are present.`);
+  sAddLi(caveatsEl, `The composite stress index is a simple unweighted z-score blend, not a validated clinical score, and can't distinguish physical from psychological load on its own — treat it as directional, not diagnostic.`);
+
+  // ---- foot ----
+  const rangeText = `${sShort(scored[0].date)}–${sShort(scored[scored.length-1].date)}`;
+  const scoreText = sBaseline ? `Scored against saved baseline (${sBaseline.range}, ${sBaseline.n} days).` : `Scored against this import's own average.`;
+  document.getElementById('s-foot').textContent = `Source: ${sImportedFiles.join(', ')}. ${rangeText}. ${scoreText}`;
+}
+
+document.getElementById('s-import-btn').addEventListener('click', () => document.getElementById('s-import-input').click());
+document.getElementById('s-import-input').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  e.target.value = ''; // allow re-selecting the same file(s) later and still fire 'change'
+  if (!files.length) return;
+
+  const texts = await Promise.all(files.map(f => f.text()));
+  const { rows, unmapped, ignored } = parseShortcutsExports(texts);
+  sDaily = buildDaily(rows);
+  sImportedFiles = files.map(f => f.name);
+
+  const fmtCounts = map => [...map.entries()].map(([k,n]) => `${k} (${n})`).join(', ');
+  const notUsed = fmtCounts(ignored);
+  const unrecognized = fmtCounts(unmapped);
+  const parts = [`${files.length} file${files.length===1?'':'s'} · ${sDaily.length} day${sDaily.length===1?'':'s'} of data`];
+  if (notUsed) parts.push(`not used by the score: ${notUsed}`);
+  if (unrecognized) parts.push(`unrecognized: ${unrecognized}`);
+  document.getElementById('s-import-status').textContent = parts.join(' — ');
+
+  // Default the baseline-period picker to the full range of what was just imported --
+  // re-picking here (rather than in renderStress, which also runs on baseline set/clear)
+  // means an in-progress date selection survives clicking "Set as baseline".
+  if (sDaily.length) {
+    const startInput = document.getElementById('s-baseline-start');
+    const endInput = document.getElementById('s-baseline-end');
+    const first = sDaily[0].date, last = sDaily[sDaily.length-1].date;
+    startInput.min = endInput.min = first;
+    startInput.max = endInput.max = last;
+    startInput.value = first;
+    endInput.value = last;
+  }
+
+  renderStress();
+});
+document.getElementById('s-baseline-btn').addEventListener('click', () => {
+  const start = document.getElementById('s-baseline-start').value;
+  const end = document.getElementById('s-baseline-end').value;
+  const range = sDaily.filter(d => (!start || d.date >= start) && (!end || d.date <= end));
+  if (range.length < 2) {
+    alert('Pick a baseline period with at least 2 days of data.');
+    return;
+  }
+  setBaseline(range);
+  renderStress();
+});
+document.getElementById('s-baseline-clear-btn').addEventListener('click', () => { clearBaseline(); renderStress(); });
+
+renderStress(); // initial empty state (or restores "vs. saved baseline" framing if one persisted)
+
+// ---------- tab switching ----------
+function showTab(name) {
+  document.getElementById('tab-schedule').style.display = name === 'schedule' ? '' : 'none';
+  document.getElementById('tab-stress').style.display = name === 'stress' ? '' : 'none';
+  document.getElementById('tab-btn-schedule').classList.toggle('active', name === 'schedule');
+  document.getElementById('tab-btn-stress').classList.toggle('active', name === 'stress');
+}
+document.getElementById('tab-btn-schedule').addEventListener('click', () => showTab('schedule'));
+document.getElementById('tab-btn-stress').addEventListener('click', () => showTab('stress'));
+</script>
+</body>
+</html>
