@@ -5,18 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Athlete Schedule Optimizer</title>
 <style>
+  /* Fall palette: parchment backgrounds, espresso text, burnt-orange accent. */
   :root {
-    --bg: #0f0f11; --bg2: #17171b; --bg3: #1e1e24;
-    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
-    --text: #e8e8f0; --text2: #8888a0; --text3: #55556a;
-    --accent: #6c63ff; --accent2: #8b83ff;
-    --radius: 10px; --radius-sm: 6px;
+    color-scheme: light;
+    --bg: #f6eee1; --bg2: #fffaf2; --bg3: #f2e7d6;
+    --border: rgba(92,58,30,0.13); --border2: rgba(92,58,30,0.24);
+    --text: #3b2a1e; --text2: #74593f; --text3: #957a60;
+    --accent: #b4541a; --accent2: #93420f;
+    --shadow: 0 1px 2px rgba(92,58,30,0.06), 0 4px 14px rgba(92,58,30,0.06);
+    --radius: 12px; --radius-sm: 7px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'SF Pro Display', -apple-system, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; }
+  body { background: var(--bg); color: var(--text); font-family: 'Nunito Sans', 'Segoe UI', -apple-system, sans-serif; font-size: 14px; line-height: 1.5;
+    background-image: radial-gradient(ellipse 900px 380px at 12% -80px, rgba(224,136,58,0.16), transparent 70%),
+                      radial-gradient(ellipse 700px 320px at 95% -60px, rgba(176,58,46,0.10), transparent 70%);
+    background-repeat: no-repeat; }
 
   .shell { max-width: 1080px; margin: 0 auto; padding: 28px 40px 60px; }
-  .page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; margin-bottom: 4px; }
+  .page-title { font-family: 'Fraunces', Georgia, serif; font-size: 28px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 4px; color: #4a2c17; }
+  .page-title::before { content: "🍂"; margin-right: 10px; font-size: 24px; }
   .page-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
 
 
@@ -25,28 +32,28 @@
     background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius);
     padding: 12px 16px; }
   .tradeoff-lbl { font-size: 11px; font-weight: 500; white-space: nowrap; min-width: 80px; }
-  .tradeoff-lbl-w { color: #0ea5e9; }
-  .tradeoff-lbl-p { color: #8b5cf6; text-align: right; }
+  .tradeoff-lbl-w { color: #3f7f99; }
+  .tradeoff-lbl-p { color: #8e3b5c; text-align: right; }
   .tradeoff-track { flex: 1; display: flex; flex-direction: column; gap: 5px; }
   .tradeoff-slider { width: 100%; appearance: none; height: 4px; border-radius: 2px; outline: none; cursor: pointer;
-    background: linear-gradient(to right, #0ea5e9, #6c63ff, #8b5cf6); }
+    background: linear-gradient(to right, #3f7f99, #b4541a, #8e3b5c); }
   .tradeoff-slider::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px;
-    border-radius: 50%; background: var(--text); border: 2px solid var(--bg2);
+    border-radius: 50%; background: var(--bg2); border: 2px solid var(--bg2);
     box-shadow: 0 0 0 2px var(--accent); cursor: pointer; }
   .tradeoff-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%;
-    background: var(--text); border: 2px solid var(--bg2); box-shadow: 0 0 0 2px var(--accent); cursor: pointer; }
+    background: var(--bg2); border: 2px solid var(--bg2); box-shadow: 0 0 0 2px var(--accent); cursor: pointer; }
   .tradeoff-labels { display: grid; grid-template-columns: 1fr 1fr 1fr; font-size: 10px; color: var(--text3); }
   .tradeoff-labels span:nth-child(2) { text-align: center; }
   .tradeoff-labels span:nth-child(3) { text-align: right; }
   .tradeoff-readout { font-size: 11px; color: var(--text2); white-space: nowrap; min-width: 90px; text-align: right; }
-  .tradeoff-lbl-a { color: #f59e0b; }
-  .tradeoff-lbl-pr { color: #8b5cf6; text-align: right; }
-  .tradeoff-slider-ap { background: linear-gradient(to right, #f59e0b, #6c63ff, #8b5cf6) !important; }
+  .tradeoff-lbl-a { color: #a8770f; }
+  .tradeoff-lbl-pr { color: #8e3b5c; text-align: right; }
+  .tradeoff-slider-ap { background: linear-gradient(to right, #a8770f, #b4541a, #8e3b5c) !important; }
 
 
   /* summary cards */
   .sum-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 22px; }
-  .sum-c { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .sum-c { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
   .sum-l { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
   .sum-v { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; line-height: 1; }
   .sum-s { font-size: 11px; color: var(--text3); margin-top: 5px; }
@@ -57,6 +64,34 @@
     color: var(--text); padding: 6px 12px; font-size: 12px; cursor: pointer; }
   .btn-save:hover { border-color: var(--accent2); color: var(--accent2); }
   .schedule-file-status { font-size: 11px; color: var(--text3); }
+
+  /* recovery check card */
+  .rec-card { display: flex; align-items: flex-start; gap: 12px; background: var(--bg2); border: 0.5px solid var(--border);
+    border-left: 3px solid var(--rec-c, var(--border2)); border-radius: var(--radius); padding: 12px 16px; margin: 0 0 18px; box-shadow: var(--shadow); }
+  .rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rec-c, var(--text3)); margin-top: 5px; flex-shrink: 0; }
+  .rec-body { flex: 1; font-size: 12px; color: var(--text2); line-height: 1.6; }
+  .rec-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .rec-toggle { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 5px; white-space: nowrap; cursor: pointer; }
+
+  /* clock conflicts: week banner + day-panel callout */
+  .clk-banner { background: #fff6e6; border: 0.5px solid #a8770f60; border-left: 3px solid #a8770f; border-radius: var(--radius);
+    padding: 12px 16px; margin-bottom: 18px; color: #6b4a08; }
+  .clk-banner .clk-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .clk-banner .clk-item { font-size: 12px; padding: 2px 0; }
+  .clk-banner .clk-item a { color: inherit; cursor: pointer; text-decoration: underline; }
+  .clk-callout { display: flex; gap: 12px; align-items: flex-start; background: #fbe8e1; border-left: 3px solid #b03a2e;
+    border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 13px; color: #7a2418; }
+  .clk-callout .clk-actions { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .clk-late { color: #b03a2e; font-weight: 600; }
+
+  /* day events */
+  .ev-chip { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 9px; margin-top: 3px; margin-right: 3px;
+    background: #4a667018; color: #3e5a64; border: 0.5px solid #4a667040; white-space: nowrap; }
+  .ev-chip.ev-rec { background: #b03a2e14; color: #9a3326; border-color: #b03a2e40; }
+  .ev-editor { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .ev-editor select { width: auto; }
+  .ev-editor input { width: 90px; }
+  .ev-effects { font-size: 12px; color: var(--text2); margin-top: 8px; line-height: 1.7; }
 
   /* config */
   .cfg-panel { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); margin-bottom: 22px; overflow: hidden; }
@@ -94,7 +129,7 @@
   .td-disabled { opacity: 0.25; cursor: not-allowed; pointer-events: none; }
   .btn-rm { background: none; border: 0.5px solid var(--border); color: var(--text3);
     border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 11px; }
-  .btn-rm:hover { border-color: #ef4444; color: #ef4444; }
+  .btn-rm:hover { border-color: #b03a2e; color: #b03a2e; }
   .btn-add { background: none; border: 0.5px solid var(--border2); color: var(--accent2);
     border-radius: var(--radius-sm); padding: 4px 12px; font-size: 12px; cursor: pointer; }
   .btn-add:hover { background: var(--bg3); }
@@ -118,8 +153,40 @@
   .btn-refresh:hover { background: var(--accent2); }
 
 
+  /* per-section accordion cards inside the config panel */
+  .cfg-acc { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius);
+    margin-bottom: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  .cfg-acc-hdr { display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 14px; cursor: pointer; user-select: none; font-size: 13px; font-weight: 500; }
+  .cfg-acc-hdr:hover { background: var(--bg3); }
+  .cfg-acc-arr { font-size: 11px; color: var(--text2); flex-shrink: 0; }
+  .cfg-acc-body { padding: 4px 14px 14px; border-top: 0.5px solid var(--border);
+    display: flex; flex-direction: column; gap: 14px; }
+  .cfg-acc-body .cfg-row { padding-top: 10px; }
+  .cfg-acc-body .full-col { grid-column: auto; }
+  .subj-tbl-wrap { overflow-x: auto; }
+  .subj-tbl-wrap .subj-tbl { min-width: 460px; }
+  .subj-tbl-wrap .td-chips { flex-wrap: nowrap; }
+
+  /* split layout: config rail (left) + schedule (right) */
+  .sched-split { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; align-items: start; }
+  .cfg-col { position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto; padding-right: 2px; }
+  .cfg-col-hdr { position: sticky; top: 0; z-index: 2; background: var(--bg);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding-bottom: 10px; margin-bottom: 2px; }
+  .cfg-col-title { font-family: 'Fraunces', Georgia, serif; font-size: 16px; font-weight: 600; }
+  .cfg-col .tradeoff-row { flex-wrap: wrap; row-gap: 6px; padding: 10px 12px; }
+  .cfg-col .tradeoff-track { order: 3; flex: 1 0 100%; }
+  .cfg-col .tradeoff-lbl { min-width: 0; }
+  .cfg-col .tradeoff-readout { margin-left: auto; min-width: 0; }
+  @media (max-width: 900px) {
+    .sched-split { grid-template-columns: 1fr; }
+    .cfg-col { position: static; max-height: none; overflow-y: visible; padding-right: 0; }
+    .cfg-col-hdr { position: static; }
+  }
+
   /* week grid */
-  .week-section { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 8px; }
+  .week-section { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 8px; box-shadow: var(--shadow); }
   .week-hdr { display: grid; grid-template-columns: 76px 1fr; align-items: center; padding: 8px 14px; gap: 12px; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 0.5px solid var(--border); }
   .day-row { display: grid; grid-template-columns: 76px 1fr; align-items: center; padding: 8px 14px; gap: 12px; cursor: pointer; border-bottom: 0.5px solid var(--border); transition: background 0.12s; }
   .day-row:last-child { border-bottom: none; }
@@ -129,7 +196,7 @@
   .d-date { font-size: 11px; color: var(--text2); margin-top: 1px; }
   .t-track { position: relative; height: 30px; background: var(--bg); border-radius: 5px; overflow: hidden; }
   .tblk { position: absolute; top: 2px; bottom: 2px; border-radius: 3px; transition: filter 0.1s; }
-  .tblk:hover { filter: brightness(1.3); }
+  .tblk:hover { filter: brightness(0.9) saturate(1.2); }
 
 
   /* axis / legend */
@@ -144,12 +211,12 @@
   .tip { position: fixed; background: var(--bg3); border: 0.5px solid var(--border2);
     border-radius: var(--radius-sm); padding: 7px 11px; font-size: 12px; color: var(--text);
     pointer-events: none; z-index: 9999; max-width: 260px; line-height: 1.7; display: none;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    box-shadow: 0 4px 18px rgba(92,58,30,0.18); }
 
   /* detail panel */
-  .det { background: var(--bg2); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 18px; margin-top: 16px; }
+  .det { background: var(--bg2); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 18px; margin-top: 16px; box-shadow: var(--shadow); }
   .det-hdr { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 0.5px solid var(--border); }
-  .det-title { font-size: 17px; font-weight: 600; }
+  .det-title { font-family: 'Fraunces', Georgia, serif; font-size: 19px; font-weight: 600; }
   .det-sub { font-size: 12px; color: var(--text2); }
   .sec-hd { font-size: 10px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.08em; margin: 14px 0 8px; }
   .chips { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -188,9 +255,9 @@
   .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
 
   #tab-stress {
-    --s-1: #3987e5; --s-2: #d95926; --s-3: #199e70; --s-4: #c98500;
-    --s-6: #008300; --s-7: #9085e9; --s-8: #e66767; --s-good: #0ca30c;
-    --s-grid: rgba(255,255,255,0.07); --s-axis-base: rgba(255,255,255,0.18);
+    --s-1: #3d6f9a; --s-2: #c4621d; --s-3: #4f7a3a; --s-4: #a8770f;
+    --s-6: #5f7d1f; --s-7: #7d5a96; --s-8: #b03a2e; --s-good: #4f7a2a;
+    --s-grid: rgba(92,58,30,0.10); --s-axis-base: rgba(92,58,30,0.28);
   }
   .s-head { margin-bottom: 20px; }
   .s-head p { margin: 0; color: var(--text2); font-size: 13px; }
@@ -243,7 +310,7 @@
   .s-tooltip {
     position: absolute; pointer-events: none; z-index: 9999;
     background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
-    padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 18px rgba(92,58,30,0.18);
     opacity: 0; transform: translate(-50%, -110%); transition: opacity .08s linear; white-space: nowrap;
   }
   .s-t-date { color: var(--text3); font-size: 11px; margin-bottom: 3px; }
@@ -286,6 +353,9 @@
     Princeton University Press.
 -->
 <script src="https://cdn.jsdelivr.net/npm/javascript-lp-solver/prod/solver.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito+Sans:opsz,wght@6..12,400;6..12,500;6..12,600;6..12,700&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="shell">
@@ -298,11 +368,12 @@
   </div>
 
 <div id="tab-schedule">
-<div id="infeasible-banner" style="display:none;background:#7f1d1d;border:0.5px solid #ef444460;border-radius:10px;padding:14px 18px;margin-bottom:18px;color:#fca5a5">
-  <div style="font-size:13px;font-weight:600;margin-bottom:6px">⚠ Schedule is infeasible — constraints cannot all be satisfied simultaneously</div>
-  <div id="infeasible-detail" style="font-size:12px;line-height:1.7;color:#fecaca"></div>
-  <div style="font-size:11px;color:#f87171;margin-top:8px">The schedule shown uses minimum values for all variables. Adjust the settings highlighted above to restore feasibility.</div>
+<div id="infeasible-banner" style="display:none;background:#fbe8e1;border:0.5px solid #b03a2e60;border-left:3px solid #b03a2e;border-radius:10px;padding:14px 18px;margin-bottom:18px;color:#7a2418">
+  <div id="infeasible-title" style="font-size:13px;font-weight:600;margin-bottom:6px">⚠ Schedule is infeasible — constraints cannot all be satisfied simultaneously</div>
+  <div id="infeasible-detail" style="font-size:12px;line-height:1.7;color:#863424"></div>
+  <div id="infeasible-note" style="font-size:11px;color:#9c3f2c;margin-top:8px">The schedule shown uses minimum values for all variables. Adjust the settings highlighted above to restore feasibility.</div>
 </div>
+<div id="conflict-banner"></div>
 <div class="sum-grid" id="sum-grid"></div>
 
 <div class="week-date-control">
@@ -313,21 +384,26 @@
   <input type="file" id="schedule-load-input" accept=".json,application/json" style="display:none" onchange="loadScheduleFile(this.files[0]);this.value=''">
   <span class="schedule-file-status" id="schedule-file-status" aria-live="polite"></span>
 </div>
+<div id="recovery-card"></div>
 
-    <div class="cfg-hdr" id="cfg-hdr">
-      <span class="cfg-hdr-left">Configuration</span>
-      <span class="cfg-hdr-right">edit schedule parameters <span id="cfg-arr">▾</span></span>
+  <div class="sched-split">
+    <div class="cfg-col">
+      <div class="cfg-col-hdr">
+        <span class="cfg-col-title">Configuration</span>
+      </div>
+      <div id="cfg-body"></div>
     </div>
-    <div id="cfg-body" style="display:none"></div>
-  </div>
 
-  <div class="week-section">
-    <div class="week-hdr"><div>Day</div><div>Timeline (5 am → 5 am)</div></div>
-    <div id="day-grid"></div>
+    <div class="sched-col">
+      <div class="week-section">
+        <div class="week-hdr"><div>Day</div><div>Timeline (5 am → 5 am)</div></div>
+        <div id="day-grid"></div>
+      </div>
+      <div class="axis-row" id="axis-row"></div>
+      <div class="legend" id="legend"></div>
+      <div id="detail"></div>
+    </div>
   </div>
-  <div class="axis-row" id="axis-row"></div>
-  <div class="legend" id="legend"></div>
-  <div id="detail"></div>
 </div>
 
 <div id="tab-stress" style="display:none">
@@ -338,6 +414,7 @@
       <button class="btn-refresh" id="s-import-btn" style="margin-top:0">Import health data…</button>
       <input type="file" id="s-import-input" accept=".txt" multiple style="display:none">
       <button class="btn-rm" id="s-baseline-clear-btn" style="display:none">Clear baseline</button>
+      <button class="btn-rm" id="s-clear-health-btn" style="display:none" data-tip="Remove all health data remembered by this browser. Imported files on disk are not touched.">Clear stored health data</button>
     </div>
     <div class="s-baseline-row" id="s-baseline-row" style="display:none">
       <span class="s-baseline-lbl">Baseline period:</span>
@@ -392,18 +469,6 @@ const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const TLS = 5;
 const WIND_DOWN_DUR = 0.25;
 
-function getComm(dt) {
-  const c = cfg.commute;
-  switch(dt) {
-    case 'school':
-    case 'friday':           return r2(c.toSchool + c.fromSchool);
-    case 'practice_weekday': return r2(c.toSchool + c.fromSchool + c.toPractice + c.fromPractice);
-    case 'practice_weekend': return r2(c.toPractice + c.fromPractice);
-    case 'game_weekday':     return r2(c.toSchool + c.toGame + c.fromGame);
-    case 'game_weekend':     return r2(c.toGame + c.fromGame);
-    default:                 return 0;
-  }
-}
 const FREE_B = {1:[0.5,12],2:[0.5,12],3:[0.5,12],4:[0.5,12],5:[1.5,12],6:[1,12],7:[0.5,13]};
 const UCURVES = {
   taper:   {6:1.4,5:1.8,4:2.0,3:1.4,2:0.7,1:0.3,0:0.0},
@@ -425,10 +490,37 @@ const PBOUNDS = {
   ramp:    {6:[0.25,0.50],5:[0.40,0.65],4:[0.55,0.75],3:[0.70,0.85],2:[0.80,1.00],1:[0.85,1.00],0:[0,0]}
 };
 const BC = {
-  "Sleep":"#3b82f6","Morning Routine":"#f59e0b","Classes":"#10b981",
-  "Commute":"#6b7280","Homework":"#d97706","Practice":"#8b5cf6",
-  "Game":"#ef4444","Study":"#22c55e","Study Break":"#4ade80","Lunch":"#f97316",
-  "Dinner":"#ea580c","Free Time":"#0ea5e9","Wind Down":"#6366f1"
+  "Sleep":"#3d5a80","Morning Routine":"#a8770f","Classes":"#2e7d6e",
+  "Commute":"#8c7b6b","Homework":"#7d5233","Practice":"#8e3b5c",
+  "Game":"#b03a2e","Study":"#5f7d1f","Lunch":"#e0883a",
+  "Dinner":"#c4621d","Free Time":"#3f7f99","Wind Down":"#6d5f8e","Falling Asleep":"#9d93bd","Event":"#4a6670",
+  "Weights":"#8a5a83","Study Break":"#b7c48f"
+};
+
+// Soft rules: going past a soft cap (or below protected sleep) costs this much objective value per
+// hour. Practice is worth ~1 per hour at the balanced slider and up to ~3 at full Performance, so a
+// penalty of 2 holds at balanced but can be overridden near the Performance end; 3 almost never.
+const SOFT_PENALTY = { event: 2, rest: 3, red: 3, amber: 1.5 };
+
+// Day events: a fixed menu of special days. Each one only tightens the LP's bounds for that day
+// (and sometimes the night before) — it never hard-codes a timeline, so the optimizer still
+// balances the rest of the week. `hours` / `time` are the event's one adjustable parameter.
+//   skipSchool  — drop classes and school commutes
+//   weekendWake — use the weekend wake-up time (practice_weekend or rest)
+//   practiceCap — fraction of the day's practice (swim + weights) ceiling still allowed (0 = none)
+//   fullSleep   — sleep floor = the whole window from lights-out to the next wake
+//   hard        — caps/floors are absolute; otherwise they're soft (penalty per hour, see SOFT_PENALTY)
+//   penalty     — soft-rule strength for this event (default SOFT_PENALTY.event)
+//   block       — fixed block placed right after the morning routine
+//   eve         — effects applied to the day BEFORE this event
+const DAY_EVENT_TYPES = {
+  no_school:  { label: 'No school', icon: '🏠', skipSchool: true, weekendWake: true },
+  test:       { label: 'Big test (SAT/ACT)', icon: '📝', param: 'hours', defaultParam: 4, paramLabel: 'test hours (0 = during school)',
+                practiceCap: 0.5, block: 'Test', eve: { practiceCap: 0.6, fullSleep: true, why: 'night before a big test', short: 'test tomorrow' } },
+  travel:     { label: 'Travel', icon: '🚗', param: 'hours', defaultParam: 6, paramLabel: 'travel hours', skipSchool: true, practiceCap: 0.5, block: 'Travel' },
+  sick:       { label: 'Sick', icon: '🤒', practiceCap: 0, fullSleep: true, hard: true },
+  rest:       { label: 'Rest day', icon: '🛋', practiceCap: 0, penalty: SOFT_PENALTY.rest },
+  late_night: { label: 'Late night', icon: '🌙', param: 'time', defaultParam: 1.0, paramLabel: 'lights out at' },
 };
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -454,16 +546,30 @@ let cfg = {
   wake: { school:6.833, friday:6.833, practice_weekday:6.833, practice_weekend:8.5, game_weekday:6.833, game_weekend:8.5, rest:10.0 },
   practiceStart:    { practice_weekday:16.5, practice_weekend:9.0 },
   gameStart:         { game_weekday:17.0, game_weekend:13.0 },  // when game begins (hrs since midnight)
-  practiceMax: 3.0,               // hard ceiling on practice (hrs) — no profile can exceed this
-  practiceMin: 0,                 // absolute floor on practice (hrs) — 0 means athlete can skip entirely
+  practiceMax: 3.0,               // per-session ceiling on swim practice (hrs); the profile shapes the week below it
+  practiceMin: 0,                 // (no longer used — the weekly training minimum replaced the daily floor)
+  swimWeekMax: 12,                // weekly swim ceiling (hrs)
+  weightsWeekMax: 2,              // weekly weight-training ceiling (hrs)
+  weightsDays: [2, 4],            // days with a weights session (1 = Mon), placed right after school
+  weightsSessionMax: 1.0,         // longest single weights session (hrs)
+  trainingMinFrac: 0.4,           // weekly swim + weights ≥ this × (swimWeekMax + weightsWeekMax)
+  practiceDayMin: 1.0,            // on a practice day, swim at least this much (lowered to any soft cap; 0 on rest/sick days)
+  homeworkSchoolDayMin: 1.5,      // homework floor on school days (homework is usually due the next day)
+  studySubjectDayMax: 2,          // most study hours one subject gets in a day
+  studyBreakInterval: 0.75,       // a study break after every 45 minutes of study…
+  studyBreakDuration: 5 / 60,     // …lasting 5 minutes (budgeted, so breaks don't eat into sleep)
+  homeworkMinFrac: 0.6,           // weekly homework ≥ this × the typical week (sum of the per-day-type amounts)
+  homeworkMaxFrac: 1.2,           // weekly homework ≤ this × the typical week
   freeFloor: 8,                   // minimum weekly free time (hrs) — spread evenly as a daily lower bound
   academicPressureThreshold: 1.5, // ratio of total study urgency to practice urgency at which
                                   // practice hi-bound starts to compress toward lo
-  studyBreakInterval: 0.75,
-  studyBreakDuration: 0.083,
   wellnessWeights: { sleep: 0.9, meals: 0.8, free: 0.4, practice: 1.0 },
   minSleep: 7.0,         // LP lower bound on sleep (hrs) — minimum guaranteed sleep per night
   maxSleep: 10.0,        // LP upper bound on sleep (hrs) — athlete can sleep up to this much
+  lightsOut: 23.0,       // usual lights-out (hrs since midnight); the plan never asks for bed earlier unless minSleep forces it
+  sleepLatency: 0.33,    // time to fall asleep after lights-out (hrs); in bed but not counted as sleep
+  dayEvents: {},         // { 'YYYY-MM-DD': { type, param } } — see DAY_EVENT_TYPES
+  recoveryCheck: true,   // let the Stress tab's recovery check tighten practice/sleep for the coming days
   dinnerTime: 18.5,
   // Base (hi-bound) durations per day type. LP can compress down to mealFloor.
   // Game/practice days are shorter by default — less time available, higher stress.
@@ -483,6 +589,7 @@ let cfg = {
 
 let perfAlpha  = 0.5;   // 0 = pure recovery, 0.5 = baseline, 1 = pure performance
 let sched = [], selDay = null, cfgOpen = false;
+let cfgOpenSections = new Set();
 let weekStartDate = localStorage.getItem('scheduleOptimizer.weekStartDate') || '2026-07-06';
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -542,6 +649,60 @@ function getDT(n) {
   if (n === 5) return "friday";
   return n <= 4 ? "school" : "rest";
 }
+function dateKeyOf(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function dayKey(n) { return dateKeyOf(scheduleDate(n)); }
+// Clock times before noon are "after midnight" for bedtime purposes (1:00 → 25.0).
+function nightHour(h) { return h < 12 ? h + 24 : h; }
+
+// dayAdjust(n) → the merged bound adjustments for day n from its day event, the next day's
+// event (e.g. the night before a test), and the recovery check.
+//   hardCap / hardFullSleep — absolute (only "sick" today)
+//   softCap + softPen       — practice above softCap × ceiling costs softPen per hour
+//   softFullPen             — each hour of sleep below the full window costs this much
+// Stricter always wins: lowest cap, highest penalty. practiceCap / fullSleep summarize both for display.
+function dayAdjust(n) {
+  const key = dayKey(n);
+  const adj = { hardCap: 1, softCap: 1, softPen: 0, hardFullSleep: false, softFullPen: 0,
+                practiceCap: 1, fullSleep: false, skipSchool: false, weekendWake: false, block: null, lightsOut: null,
+                event: null, reasons: [] };
+  const apply = (src, why, fromRecovery = false) => {
+    const pen = src.penalty ?? SOFT_PENALTY.event;
+    if (src.practiceCap != null) {
+      if (src.hard) adj.hardCap = Math.min(adj.hardCap, src.practiceCap);
+      else if (src.practiceCap <= adj.softCap) { adj.softCap = src.practiceCap; adj.softPen = Math.max(adj.softPen, pen); }
+    }
+    if (src.fullSleep) { if (src.hard) adj.hardFullSleep = true; else adj.softFullPen = Math.max(adj.softFullPen, pen); }
+    adj.practiceCap = Math.min(adj.hardCap, adj.softCap);
+    adj.fullSleep = adj.hardFullSleep || adj.softFullPen > 0;
+    if (why) adj.reasons.push({ text: why, short: src.short, rec: fromRecovery, practiceCap: src.practiceCap, fullSleep: !!src.fullSleep, hard: !!src.hard });
+  };
+  const ev = cfg.dayEvents?.[key];
+  const type = ev && DAY_EVENT_TYPES[ev.type];
+  if (type) {
+    const param = ev.param ?? type.defaultParam;
+    adj.event = { ...ev, param, type: ev.type, label: type.label, icon: type.icon };
+    if (type.skipSchool || (type.block && param > 0 && n <= 5)) adj.skipSchool = !!(type.skipSchool || param > 0);
+    if (type.weekendWake) adj.weekendWake = true;
+    if (type.block && param > 0) adj.block = { label: `${type.block} (${fmtD(param)})`, hrs: param };
+    if (type.param === 'time') adj.lightsOut = nightHour(param);
+    apply(type, null);
+  }
+  const nextEv = cfg.dayEvents?.[dateKeyOf(scheduleDate(n + 1))];
+  const nextType = nextEv && DAY_EVENT_TYPES[nextEv.type];
+  if (nextType?.eve) apply(nextType.eve, nextType.eve.why);
+  if (cfg.recoveryCheck && typeof recoveryAdjustFor === 'function') {
+    const rec = recoveryAdjustFor(key);
+    if (rec) apply(rec, rec.why, true);
+  }
+  return adj;
+}
+
+// Wake-up time for day n: weekend wake on a "no school" day, otherwise the day type's wake.
+function wakeFor(n, c = cfg) {
+  if (dayAdjust(n).weekendWake) return c.wake[c.practiceDays.includes(((n - 1) % 7) + 1) ? 'practice_weekend' : 'rest'];
+  return c.wake[getDT(((n - 1) % 7) + 1)];
+}
+
 function dtg(n) {
   if (!cfg.gameDay) return 99;
   const d = cfg.gameDay - n;
@@ -549,7 +710,7 @@ function dtg(n) {
   // before it in a circular week (e.g. game=Mon, day=Sun → d=-6 → should be +1).
   return d < -1 ? d + 7 : d;
 }
-function getPB(n) {
+function getPB(n, uncapped = false) {
   const dt = getDT(n);
   if (!cfg.practiceDays.includes(n) || dt.startsWith("game")) return [0, 0];
 
@@ -581,23 +742,35 @@ function getPB(n) {
     }
   }
 
-  return [pracLo, pracHi];
-}
-function avail(n) {
-  const dt = getDT(n), cls = n <= 5 ? cfg.classHours : 0;
-  return r2(24 - 0.5 - cls - getComm(dt) - cfg.homework[dt]); // 0.5h morning routine
+  // Hard caps only (sick). Soft caps are priced in the LP instead — see solveWeekLP.
+  if (!uncapped) {
+    const cap = dayAdjust(n).hardCap;
+    if (cap < 1) {
+      pracHi = r2(pracHi * cap);
+      if (pracHi < 0.05) return [0, 0];
+    }
+  }
+
+  // No daily floor: the weekly training minimum (swim + weights) replaced it, so the LP can
+  // genuinely choose how much to swim each day. pracLo above is only the squeeze target.
+  return [0, pracHi];
 }
 
-// getMealVars(dt): returns LP variable defs for meals on this day type.
-// Dinner is always present. Lunch only on day types that include an explicit lunch block.
-// lo = mealFloor (30 min), hi = day-type base (the "relaxed" default for that day).
+// Weights session ceiling for day n: weights days only, never on a game day, hard caps apply.
+function getWeightsHi(n) {
+  if (!(cfg.weightsDays || []).includes(n) || getDT(n).startsWith('game') || dtg(n) === -1) return 0;
+  return r2((cfg.weightsSessionMax || 0) * dayAdjust(n).hardCap);
+}
+// getMealVars(t): returns LP variable defs for meals on the day described by dayTemplate t.
+// Dinner is always present. Lunch only when the day's recipe has a lunch block.
+// lo = mealFloor (30 min), hi = mealMax.
 // The LP compresses toward lo on busy days when budget is tight.
-function getMealVars(dt) {
+function getMealVars(t) {
   const floor = cfg.mealFloor;
   const hi    = Math.max(floor, cfg.mealMax);
   const vars  = [];
   vars.push({ key: "Dinner", lo: floor, hi });
-  if (cfg.mealBases.lunch[dt] != null) {
+  if (t.slots.includes("Lunch")) {
     vars.push({ key: "Lunch", lo: floor, hi });
   }
   return vars;
@@ -626,12 +799,18 @@ function pUrg(d) {
 }
 
 // Daily upper bound for study hours on a given subject.
-// Active (before all tests pass): 2.25h/day max.
+// Active (before all tests pass): cfg.studySubjectDayMax (default 2h).
 // Post-test: capped at postTestMax (default 0.1h — light review only).
 function studyHiCap(s, n) {
   const postMax = s.postTestMax ?? 0.1;
-  if (!s.testDays || s.testDays.length === 0) return 8;
-  return s.testDays.every(td => n >= td) ? postMax : 8;
+  const dayMax = cfg.studySubjectDayMax ?? 8;
+  if (!s.testDays || s.testDays.length === 0) return dayMax;
+  return s.testDays.every(td => n >= td) ? Math.min(postMax, dayMax) : dayMax;
+}
+// Each study hour also costs its share of breaks in the day's budget (5 min per 45 min by default).
+function studyBudgetCost() {
+  const every = cfg.studyBreakInterval || 0, brk = cfg.studyBreakDuration || 0;
+  return every > 0 && brk > 0 ? 1 + brk / every : 1;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -643,58 +822,66 @@ function hideInfeasibleBanner() {
   if (el) el.style.display = 'none';
 }
 
-function showInfeasibleBanner(model) {
+function showInfeasibleBanner(model, unmet = []) {
   const banner = document.getElementById('infeasible-banner');
   const detail = document.getElementById('infeasible-detail');
+  const title  = document.getElementById('infeasible-title');
   if (!banner || !detail) return;
+  if (title) title.textContent = unmet.length
+    ? '⚠ Some floors could not be met — the schedule below is the closest the week allows'
+    : '⚠ Schedule is infeasible — constraints cannot all be satisfied simultaneously';
 
-  const reasons = [];
+  const note = document.getElementById('infeasible-note');
+  if (note) note.style.display = unmet.length ? 'none' : '';
+
+  // Friendly name + where-to-fix-it for each kind of lower-bound variable, keyed by its prefix.
+  const LO_VAR_INFO = {
+    sleep:  { name: (v) => `minimum sleep (${r2(v)}h)`,                    fix: 'lower "Min sleep" in Sleep & Meals, or remove a sick / test event that protects the full sleep window' },
+    prac:   { name: (v) => `practice-day minimum (${r2(v)}h)`,              fix: 'lower "Min per practice day" in Practice, or mark the day as a rest day' },
+    dinner: { name: () => `dinner minimum (${r2(cfg.mealFloor*60)}m)`,      fix: 'lower "Meal min" in Sleep & Meals' },
+    lunch:  { name: () => `lunch minimum (${r2(cfg.mealFloor*60)}m)`,       fix: 'lower "Meal min" in Sleep & Meals' },
+    free:   { name: (v) => `the built-in daily free-time floor (${r2(v)}h)`, fix: "free up time elsewhere that day — it isn't user-adjustable" },
+  };
+
+  const reasons = unmet.map(u => `${u.label} is short by ${u.short}h. Fix by: ${u.fix}.`);
 
   // Check each day's budget: sum of all lower bounds vs available budget
   for (let i = 0; i < 7; i++) {
     const n = i + 1;
     const budgetKey = `budget_${n}`;
     const budget = model.constraints[budgetKey]?.max ?? 0;
-    const sumLo = Object.entries(model.variables).reduce((acc, [, vDef]) => {
-      if (!vDef[budgetKey]) return acc;
-      // Find the lo constraint for this variable
+    const contributors = [];
+    Object.entries(model.variables).forEach(([vk, vDef]) => {
+      if (!vDef[budgetKey]) return;
       const loKey = Object.keys(vDef).find(k => k.endsWith('_lo') && model.constraints[k]);
-      return acc + (loKey ? (model.constraints[loKey].min ?? 0) : 0);
-    }, 0);
-    if (sumLo > budget + 0.05) {
-      reasons.push(`${DAYS[i]}: minimum obligations (${r2(sumLo)}h) exceed available budget (${r2(budget)}h) — try reducing practice min, pre-test floors, or free time floor`);
-    }
-  }
-
-  // Check pre-test floors vs total available study capacity before each test
-  cfg.subjects.forEach(s => {
-    if (!s.preTestFloor || s.preTestFloor <= 0 || !s.testDays?.length) return;
-    s.testDays.forEach(td => {
-      const key = `pretest_${sk(s.name)}_${td}`;
-      const floor = model.constraints[key]?.min ?? 0;
-      if (floor <= 0) return;
-      const totalCap = Object.entries(model.variables).reduce((acc, [vk, vDef]) => {
-        if (!vDef[key]) return acc;
-        const hiKey = vk + '_hi';
-        return acc + (model.constraints[hiKey]?.max ?? 2.25);
-      }, 0);
-      if (totalCap < floor - 0.05) {
-        reasons.push(`${s.name} pre-test floor (${floor}h before ${DAYS[td-1]}) exceeds total study capacity (${r2(totalCap)}h) — reduce the pre-test floor`);
-      }
+      const lo = loKey ? (model.constraints[loKey].min ?? 0) : 0;
+      if (lo <= 0.001) return;
+      const prefix = vk.split('_')[0];
+      const info = LO_VAR_INFO[prefix];
+      contributors.push({ lo, label: info ? info.name(lo) : `${vk} (${r2(lo)}h)`, fix: info?.fix });
     });
-  });
-
-  // Check free floor vs total free capacity across all days
-  if (cfg.freeFloor > 0) {
-    const totalFreeCap = Array.from({length:7}, (_, i) => FREE_B[i+1][1]).reduce((a,b) => a+b, 0);
-    const totalFreeMin = Array.from({length:7}, (_, i) => FREE_B[i+1][0]).reduce((a,b) => a+b, 0);
-    if (cfg.freeFloor > totalFreeCap) {
-      reasons.push(`Weekly free time floor (${cfg.freeFloor}h) exceeds the maximum possible free time (${totalFreeCap}h) — reduce the free time floor`);
+    const sumLo = contributors.reduce((a, c) => a + c.lo, 0);
+    if (sumLo > budget + 0.05) {
+      const fixedHrs = type => r2(dayTemplate(n).fixed.filter(f => f.type === type).reduce((a, f) => a + f.hrs, 0));
+      const cls = fixedHrs('Classes'), comm = fixedHrs('Commute'), hw = fixedHrs('Homework'), game = fixedHrs('Game');
+      const fixedParts = [
+        cls > 0 && `${cls}h classes (Schedule → Class hours/day)`,
+        comm > 0 && `${r2(comm)}h commute (Commute)`,
+        hw > 0 && `${hw}h homework (Schedule → Homework)`,
+        game > 0 && `${game}h game (Game & Sport → Game duration)`,
+      ].filter(Boolean).join(', ');
+      const levers = [...new Set(contributors.map(c => c.fix).filter(Boolean))];
+      if (fixedParts) levers.push(`reduce ${DAYS[i]}'s class hours, homework, or commute (Schedule / Commute)`);
+      reasons.push(
+        `${DAYS[i]} needs at least ${r2(sumLo)}h for ${contributors.map(c => c.label).join(', ')}, ` +
+        `but only ${r2(budget)}h remains out of the ${dayTemplate(n).dayLen}h until the next morning's wake-up after 0.5h morning routine, ${fixedParts || 'no other fixed commitments'}, ` +
+        `and ${WIND_DOWN_DUR*60}m wind-down — short by ${r2(sumLo - budget)}h. Fix by: ${levers.join('; ')}.`
+      );
     }
   }
 
   if (reasons.length === 0) {
-    reasons.push('The combination of constraints cannot be satisfied simultaneously. Try reducing pre-test floors, free time floor, or practice min.');
+    reasons.push('The combination of constraints cannot be satisfied simultaneously. Try reducing pre-test floors (Academics), the weekly free time floor (Free Time), or the practice minimum (Practice).');
   }
 
   detail.innerHTML = reasons.map(r => `• ${r}`).join('<br>');
@@ -718,46 +905,102 @@ function addLPVar(model, key, objW, budgetKey, lo, hi, extraCoeffs) {
   model.variables[key] = vDef;
 }
 
-function solveWeekLP() {
+// The weekly free-time floor and the pre-test study floors are soft: each gets a shortfall
+// variable with a large objective penalty, so the LP meets them whenever it can and otherwise
+// comes as close as the budget allows (instead of returning an unusable infeasible solution).
+const SHORTFALL_PENALTY = 1000;
+const WEIGHTS_VALUE = 0.8;   // an hour of weights is worth 80% of an hour of swim practice in the objective
+
+// evening: { [n]: { schoolMax, practice } } from compute()'s second pass — on days whose evening ran
+// past lights-out, cap that day's homework + study and hold practice at its first-pass value, so the
+// re-solve moves schoolwork to other days instead of cutting sleep or practice.
+function solveWeekLP(evening = {}) {
   const wellM = Math.pow(3,  1 - 2 * perfAlpha);
   const perfM = Math.pow(3, -1 + 2 * perfAlpha);
 
   const model = { optimize: 'obj', opType: 'max', constraints: {}, variables: {} };
+  const shortfalls = [];   // { key, label, floor } for every soft floor, read back after solving
+  const days = DAYS.map((_, i) => dayTemplate(i + 1));
 
   // ── Per-day budget constraints ──
-  for (let i = 0; i < 7; i++) {
-    const n = i + 1;
-    model.constraints[`budget_${n}`] = { max: r2(avail(n)) };
+  days.forEach(t => { model.constraints[`budget_${t.n}`] = { max: t.budget }; });
+
+  // ── Cross-day: free time floor (soft) ──
+  if (cfg.freeFloor > 0) {
+    model.constraints['free_floor'] = { min: cfg.freeFloor };
+    model.variables['short_free_floor'] = { obj: -SHORTFALL_PENALTY, free_floor: 1 };
+    shortfalls.push({ key: 'short_free_floor', label: `Weekly free-time floor (${cfg.freeFloor}h)`,
+      fix: 'lower "Weekly free time floor" in Free Time, or free up daily capacity (less homework/commute/class hours/practice)' });
   }
 
-  // ── Cross-day: free time floor ──
-  if (cfg.freeFloor > 0) model.constraints['free_floor'] = { min: cfg.freeFloor };
-
-  // ── Cross-day: pre-test study floors (one per subject × test day) ──
+  // ── Cross-day: pre-test study floors (one per subject × test day, soft) ──
   cfg.subjects.forEach(s => {
     if (!s.preTestFloor || s.preTestFloor <= 0 || !s.testDays?.length) return;
     s.testDays.forEach(td => {
-      model.constraints[`pretest_${sk(s.name)}_${td}`] = { min: s.preTestFloor };
+      const ck = `pretest_${sk(s.name)}_${td}`;
+      model.constraints[ck] = { min: s.preTestFloor };
+      model.variables[`short_${ck}`] = { obj: -SHORTFALL_PENALTY, [ck]: 1 };
+      shortfalls.push({ key: `short_${ck}`, label: `${s.name} pre-test floor (${s.preTestFloor}h before ${DAYS[td-1]})`,
+        fix: `lower ${s.name}'s "Pre-test floor" in Academics, free up time on the days before ${DAYS[td-1]}, or move the test later` });
     });
   });
 
+  // ── Cross-day: training (swim ≤ weekly max, weights ≤ weekly max, swim + weights ≥ minimum) ──
+  const trainMin = r2((cfg.trainingMinFrac ?? 0.4) * ((cfg.swimWeekMax ?? 12) + (cfg.weightsWeekMax ?? 0)));
+  model.constraints['swim_week'] = { max: cfg.swimWeekMax ?? 12 };
+  model.constraints['wts_week']  = { max: cfg.weightsWeekMax ?? 0 };
+  model.constraints['train_week'] = { min: trainMin };
+  model.variables['short_train_week'] = { obj: -SHORTFALL_PENALTY, train_week: 1 };
+  shortfalls.push({ key: 'short_train_week', label: `Weekly training minimum (${trainMin}h swim + weights)`,
+    fix: 'expected on sick weeks; otherwise add practice days, raise the per-session max, or lower "Min training" in Practice' });
+
+  // ── Cross-day: homework as a weekly amount ──
+  // The typical week (per-day-type amounts in Schedule → Homework) sets the range. Hours up to the
+  // typical total are valued above free time, hours beyond it below free time, so the balanced
+  // slider lands near the typical week; Performance pushes toward the max, Recovery toward the min.
+  const hwTypical = r2(days.reduce((a, t) => a + (cfg.homework[t.dt] || 0), 0));
+  model.constraints['hw_week'] = { min: r2((cfg.homeworkMinFrac ?? 0.6) * hwTypical), max: r2((cfg.homeworkMaxFrac ?? 1.2) * hwTypical) };
+  model.constraints['hw_core'] = { max: hwTypical };
+  model.variables['short_hw_week'] = { obj: -SHORTFALL_PENALTY, hw_week: 1 };
+  shortfalls.push({ key: 'short_hw_week', label: `Weekly homework minimum (${r2((cfg.homeworkMinFrac ?? 0.6) * hwTypical)}h)`,
+    fix: 'lower the homework minimum % in Schedule, or free up time on school days' });
+  const hwValue = Math.max(0.1, cfg.wellnessWeights.free);
+
   // ── Per-day variables ──
   for (let i = 0; i < 7; i++) {
-    const n = i + 1, d = i;
-    const dt = getDT(n);
-    const [pracLo, pracHi] = getPB(n);
-    const mealVars   = getMealVars(dt);
+    const n = i + 1, d = i, t = days[i], adj = t.adj;
+    const [, pracHi] = getPB(n);
+    const mealVars   = getMealVars(t);
     const bk = `budget_${n}`;
 
-    // Sleep — decision variable: min = derived from wake/bedtime, max = cfg.maxSleep
-    const sleepMin = cfg.minSleep;
-    const sleepMax = Math.max(sleepMin, cfg.maxSleep);
-    addLPVar(model, `sleep_${n}`, cfg.wellnessWeights.sleep * wellM, bk, sleepMin, sleepMax, {});
-
-    // Practice
-    if (pracHi > 0) {
-      addLPVar(model, `prac_${n}`, pUrg(d) * perfM, bk, pracLo, pracHi, {});
+    // Sleep — bounded by min/max sleep and the lights-out window (see dayTemplate). A soft
+    // full-sleep rule prices every hour below the full window instead of forbidding it.
+    const sleepExtra = {};
+    if (adj.softFullPen > 0 && t.sleepHi > t.sleepLo + 0.01) {
+      model.constraints[`sleepfull_${n}`] = { min: t.sleepHi };
+      model.variables[`sleepshort_${n}`] = { obj: -adj.softFullPen, [`sleepfull_${n}`]: 1 };
+      sleepExtra[`sleepfull_${n}`] = 1;
     }
+    addLPVar(model, `sleep_${n}`, cfg.wellnessWeights.sleep * wellM, bk, t.sleepLo, t.sleepHi, sleepExtra);
+
+    // Practice (swim) and weights — each split at the soft cap: hours above it cost adj.softPen.
+    // `lo` (swim only) is the per-practice-day floor; it never exceeds the soft cap, so a capped
+    // day is never forced over its cap just to meet the floor.
+    const addTraining = (key, hi, value, weekKey, lo = 0) => {
+      if (hi <= 0) return;
+      const capHi = adj.softCap < 1 ? r2(hi * adj.softCap) : hi;
+      const coeffs = { [weekKey]: 1, train_week: 1 };
+      if (capHi > 0) addLPVar(model, key, value, bk, Math.min(lo, capHi), capHi, coeffs);
+      if (capHi < hi) addLPVar(model, key + 'x', value - adj.softPen, bk, 0, r2(hi - capHi), coeffs);
+    };
+    addTraining(`prac_${n}`, pracHi, pUrg(d) * perfM, 'swim_week', Math.min(cfg.practiceDayMin ?? 0, pracHi));
+    addTraining(`wts_${n}`, t.weightsHi, WEIGHTS_VALUE * pUrg(d) * perfM, 'wts_week');
+
+    // Homework — daily bounds, weekly total; worth a bit more the day before a test.
+    const hwBoost = cfg.subjects.some(s => (s.testDays || []).includes(n + 1)) ? 1.25 : 1;
+    model.constraints[`hwday_${n}`] = { min: t.hwLo, max: t.hwHi };
+    model.variables[`hwc_${n}`] = { obj: 1.5 * hwValue * perfM * hwBoost, [bk]: 1, [`hwday_${n}`]: 1, hw_week: 1, hw_core: 1 };
+    model.variables[`hwx_${n}`] = { obj: 0.75 * hwValue * perfM * hwBoost, [bk]: 1, [`hwday_${n}`]: 1, hw_week: 1 };
 
     // Meals
     mealVars.forEach(mv => {
@@ -777,8 +1020,31 @@ function solveWeekLP() {
       if (s.preTestFloor > 0 && s.testDays?.length) {
         s.testDays.forEach(td => { if (n < td) pretestCoeffs[`pretest_${sk(s.name)}_${td}`] = 1; });
       }
-      addLPVar(model, `study_${sk(s.name)}_${n}`, sUrg(s, d) * perfM, bk, 0, hi, pretestCoeffs);
+      addLPVar(model, `study_${sk(s.name)}_${n}`, sUrg(s, d) * perfM, bk, 0, hi, { ...pretestCoeffs, [bk]: studyBudgetCost() });
     });
+
+    // Study that didn't fit on the clock (second pass only): cap the day at what the timeline placed
+    const eve = evening[n];
+    if (eve?.studyMax != null) {
+      model.constraints[`stcap_${n}`] = { max: eve.studyMax };
+      cfg.subjects.forEach(s => { const v = model.variables[`study_${sk(s.name)}_${n}`]; if (v) v[`stcap_${n}`] = 1; });
+    }
+    // Evening limit (second pass only): schoolwork capped, practice held where it was
+    if (eve?.schoolMax != null) {
+      const ek = `eve_${n}`;
+      model.constraints[ek] = { max: eve.schoolMax };
+      [`hwc_${n}`, `hwx_${n}`, ...cfg.subjects.map(s => `study_${sk(s.name)}_${n}`)]
+        .forEach(v => { if (model.variables[v]) model.variables[v][ek] = 1; });
+      if (pracHi > 0) {
+        const fk = `pracfix_${n}`;
+        model.constraints[fk] = { equal: eve.practice };
+        [`prac_${n}`, `prac_${n}x`].forEach(v => { if (model.variables[v]) model.variables[v][fk] = 1; });
+      }
+      // Hold planned sleep too: otherwise the freed hours buy an earlier bedtime and the
+      // evening still runs past it.
+      model.constraints[`sleepcap_${n}`] = { max: eve.sleepMax };
+      model.variables[`sleep_${n}`][`sleepcap_${n}`] = 1;
+    }
   }
 
   let sol;
@@ -789,41 +1055,55 @@ function solveWeekLP() {
     sol = { feasible: false };
   }
 
-  if (!sol.feasible) {
-    showInfeasibleBanner(model);
+  // A solver that reports infeasible still returns partial variable values that violate the
+  // constraints (negative free time, study above budget). Never read those back: fall through
+  // to each variable's lower bound instead.
+  if (!sol.feasible) sol = { feasible: false };
+
+  const unmet = sol.feasible
+    ? shortfalls.map(s => ({ label: s.label, fix: s.fix, short: r2(sol[s.key] ?? 0) })).filter(s => s.short > 0.01)
+    : [];
+  if (!sol.feasible || unmet.length) {
+    showInfeasibleBanner(model, unmet);
   } else {
     hideInfeasibleBanner();
   }
 
   // Extract per-day variable maps (falls back to lo values if infeasible)
+  // jsLPSolver leaves zero-valued variables out of a feasible solution, so a missing key means 0
+  // there; the lower-bound fallbacks only apply when the solve failed outright.
+  const val = (key, fallback) => sol.feasible ? (sol[key] ?? 0) : fallback;
   return Array.from({length: 7}, (_, i) => {
     const n = i + 1;
-    const dt = getDT(n);
-    const [pracLo, pracHi] = getPB(n);
-    const mealVars = getMealVars(dt);
-    const sleepMin = cfg.minSleep;
+    const [, pracHi] = getPB(n);
+    const mealVars = getMealVars(days[i]);
     const res = {};
-    res['Sleep'] = r2(sol[`sleep_${n}`] ?? sleepMin);
-    if (pracHi > 0) res['Practice'] = r2(sol[`prac_${n}`] ?? pracLo);
-    mealVars.forEach(mv => { res[mv.key] = r2(sol[`${mv.key.toLowerCase()}_${n}`] ?? mv.lo); });
-    res['Free'] = r2(sol[`free_${n}`] ?? FREE_B[n][0]);
-    cfg.subjects.forEach(s => { res['Study:' + s.name] = r2(sol[`study_${sk(s.name)}_${n}`] ?? 0); });
+    res['Sleep'] = r2(val(`sleep_${n}`, days[i].sleepLo));
+    if (pracHi > 0) res['Practice'] = r2(val(`prac_${n}`, 0) + val(`prac_${n}x`, 0));
+    if (days[i].weightsHi > 0) res['Weights'] = r2(val(`wts_${n}`, 0) + val(`wts_${n}x`, 0));
+    res['Homework'] = r2(val(`hwc_${n}`, days[i].hwLo) + val(`hwx_${n}`, 0));
+    // How far the plan went past today's soft rules (shown in the day panel)
+    res['_overCap'] = r2(val(`prac_${n}x`, 0) + val(`wts_${n}x`, 0));
+    res['_sleepShort'] = r2(val(`sleepshort_${n}`, 0));
+    mealVars.forEach(mv => { res[mv.key] = r2(val(`${mv.key.toLowerCase()}_${n}`, mv.lo)); });
+    res['Free'] = r2(val(`free_${n}`, FREE_B[n][0]));
+    cfg.subjects.forEach(s => { res['Study:' + s.name] = r2(val(`study_${sk(s.name)}_${n}`, 0)); });
     return res;
   });
 }
 
 // ── Assemble a full day result from solver output ─────────────────────
-function assembleRow(n, varRes) {
-  const d = n - 1, dt = getDT(n), pb = getPB(n);
+function assembleRow(n, varRes, t) {
+  const d = n - 1, dt = getDT(n), pb = getPB(n), pbU = getPB(n, true);
 
-  const res = { Practice: 0, ...varRes };
+  const res = { Practice: 0, Weights: 0, ...varRes };
   Object.keys(res).forEach(k => res[k] = r2(res[k]));
 
   // Meals = LP-allocated dinner + lunch (lunch only present on applicable day types)
   res.Meals = r2((res.Dinner || 0) + (res.Lunch || 0));
 
   const stTot = r2(cfg.subjects.reduce((a, s) => a + (res["Study:" + s.name] || 0), 0));
-  const perf  = r2(pUrg(d) * res.Practice + cfg.subjects.reduce((a, s) => a + sUrg(s, d) * (res["Study:" + s.name] || 0), 0));
+  const perf  = r2(pUrg(d) * (res.Practice + WEIGHTS_VALUE * (res.Weights || 0)) + cfg.subjects.reduce((a, s) => a + sUrg(s, d) * (res["Study:" + s.name] || 0), 0));
 
   // Practice decision breakdown (three stages):
   //   pracRawHi  — profile ceiling before any pressure (PBOUNDS hi × practiceMax)
@@ -831,10 +1111,11 @@ function assembleRow(n, varRes) {
   //   Practice   — LP allocation within [lo, hi]
   const gClamped   = Math.min(Math.max(dtg(n), 0), 6);
   const fracEntry  = PBOUNDS[cfg.sportProfile]?.[gClamped];
-  const pracRawHi  = fracEntry ? r2(fracEntry[1] * cfg.practiceMax) : pb[1];
-  const pracRawLo  = fracEntry ? r2(Math.max(cfg.practiceMin, fracEntry[0] * cfg.practiceMax)) : pb[0];
-  const pressureSqueeze = pracRawHi > pb[0] + 0.01
-    ? r2(Math.max(0, 1 - (pb[1] - pb[0]) / (pracRawHi - pb[0])))
+  const pracRawHi  = fracEntry ? r2(fracEntry[1] * cfg.practiceMax) : pbU[1];
+  const pracRawLo  = fracEntry ? r2(Math.max(cfg.practiceMin, fracEntry[0] * cfg.practiceMax)) : pbU[0];
+  // Academic-pressure squeeze only (before any day-event / recovery cap, which is reported separately)
+  const pressureSqueeze = pracRawHi > pbU[0] + 0.01
+    ? r2(Math.max(0, 1 - (pbU[1] - pbU[0]) / (pracRawHi - pbU[0])))
     : 0;
   // LP squeeze: how far below hi the greedy placed practice (budget competition with study)
   const lpSqueeze = pb[1] > pb[0] + 0.01
@@ -843,235 +1124,374 @@ function assembleRow(n, varRes) {
 
   return {
     ...res, n, dt, dayName: DAYS[d], dateLabel: formatScheduleDate(n),
-    wake: cfg.wake[dt], pb, comm: getComm(dt), hw: cfg.homework[dt], avail: r2(avail(n)),
+    wake: t.wake, pb, hw: res.Homework, hwRange: [t.hwLo, t.hwHi], weightsHi: t.weightsHi, avail: t.budget,
+    comm: r2(t.fixed.filter(f => f.type === 'Commute').reduce((a, f) => a + f.hrs, 0)),
     stTot, perf, dtg: dtg(n),
     pracRawLo, pracRawHi, pressureSqueeze, lpSqueeze,
+    adj: t.adj, lightsOut: t.lightsOut, sleepWindow: t.sleepWindow, dateKey: dayKey(n),
     isGame: getDT(n).startsWith("game"),
     isPrac: cfg.practiceDays.includes(n) && !getDT(n).startsWith("game")
   };
 }
 
 // ── Main compute ──────────────────────────────────────────────────────
+// The LP budgets hours, not clock order, so a late practice can push the evening past lights-out.
+// Protect bedtime by trimming schoolwork first: lay the week out, and for any day that ran over,
+// cap its homework + study by the overrun (never below the daily homework minimum), hold practice
+// where it was, and re-solve so the trimmed hours move to other days. A few passes at most.
+// The same passes also handle study the clock can't hold (no open gap left for it): that day's
+// study is capped at what the timeline placed, so the re-solve moves the rest to other days.
+const EVENING_PASSES = 3;
 function compute() {
-  const weekResults = solveWeekLP();
-  sched = Array.from({length: 7}, (_, i) => {
-    const row = assembleRow(i + 1, weekResults[i]);
-    row.tl = buildTL(row);
-    return row;
+  const evening = {}, firstSchool = {}, firstStudy = {};
+  for (let pass = 0; pass < EVENING_PASSES; pass++) {
+    const weekResults = solveWeekLP(evening);
+    sched = Array.from({length: 7}, (_, i) => {
+      const t = dayTemplate(i + 1);
+      const row = assembleRow(i + 1, weekResults[i], t);
+      // Fixed-time events (practice, game) can push bedtime later than the LP assumed; the
+      // timeline holds the sleep the athlete actually gets, so make the row agree with it.
+      row.lpSleep = row.Sleep;
+      ({ tl: row.tl, sleep: row.Sleep, overrun: row.overrun, studyPlaced: row.studyPlaced } = t.layout(row));
+      row.hwLo = t.hwLo;
+      return row;
+    });
+    if (pass === 0) sched.forEach(r => { firstSchool[r.n] = r2(r.Homework + r.stTot); firstStudy[r.n] = r.stTot; });
+    let changed = false;
+    sched.forEach(r => {
+      if (r.stTot - r.studyPlaced > 0.05) {
+        const prev = evening[r.n]?.studyMax ?? Infinity;
+        if (r.studyPlaced < prev - 0.04) { evening[r.n] = { ...evening[r.n], studyMax: r.studyPlaced }; changed = true; }
+      }
+    });
+    sched.forEach(r => {
+      if (r.overrun < 0.05) return;
+      // Only schoolwork placed AFTER practice / the game can shorten the evening; schoolwork
+      // before it doesn't move bedtime, so trimming it would just shuffle hours around.
+      const day = r.tl.slice(1);
+      const ai = day.findIndex(b => b.type === 'Practice' || b.type === 'Game');
+      const after = ai < 0 ? 0 : day.slice(ai + 1).filter(b => b.type === 'Homework' || b.type === 'Study').reduce((a, b) => a + b.dur, 0);
+      const school = r2(r.Homework + r.stTot);
+      const target = Math.max(r.hwLo, r2(school - Math.min(r.overrun, after)));
+      if (target < school - 0.04) {
+        evening[r.n] = { ...evening[r.n], schoolMax: Math.min(evening[r.n]?.schoolMax ?? Infinity, target), practice: r.Practice || 0,
+                         sleepMax: Math.min(evening[r.n]?.sleepMax ?? Infinity, r.lpSleep) };
+        changed = true;
+      }
+    });
+    if (!changed) break;
+  }
+  sched.forEach(r => {
+    r.studyMoved = evening[r.n]?.studyMax != null ? Math.max(0, r2(firstStudy[r.n] - r.stTot)) : 0;
+    r.eveningTrim = evening[r.n]?.schoolMax != null ? Math.max(0, r2(firstSchool[r.n] - (r.Homework + r.stTot) - r.studyMoved)) : 0;
+    r.studyUnplaced = Math.max(0, r2(r.stTot - r.studyPlaced));   // still didn't fit after the passes
+    r.conflicts = clockConflicts(r, cfg);
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-// TIMELINE BUILDER  (FIX #7: practice_weekday uses doStudy; FIX #4: practice_weekend calls doStudy)
-// ═══════════════════════════════════════════════════════════════════════
-function buildTL(row) {
-  const { n, dt } = row;
-  const cls = n <= 5 ? cfg.classHours : 0;
-  const hw  = cfg.homework[dt];
-  const blks = [];
-  let cur = row.wake;
+// Clock conflicts: practice or a game that can't start at its set time because the day runs into it.
+// Returns [{ what, setAt, actual, late, cause, causeKind }] for the day panel callout and week banner.
+function clockConflicts(row, c) {
+  const out = [];
+  const day = row.tl.slice(1);
+  const check = (type, setAt, what) => {
+    const i = day.findIndex(b => b.type === type);
+    if (i < 0 || setAt == null) return;
+    const blk = day[i], late = r2(blk.start - setAt);
+    if (late <= 0.01) return;
+    let j = i - 1; while (j >= 0 && ['Commute', 'Free Time'].includes(day[j].type)) j--;
+    const prev = day[j];
+    const prevEnd = prev ? prev.start + prev.dur : row.wake;
+    const travel = blk.start - prevEnd;
+    const causeKind = !prev || prev.type === 'Morning Routine' ? 'wake' : prev.type === 'Classes' ? 'school' : 'other';
+    const base = causeKind === 'wake' ? `the day starts at ${fmtT(row.wake)}${prev ? ' (plus the morning routine)' : ''}`
+      : causeKind === 'school' ? `school ends at ${fmtT(prevEnd)}`
+      : `${prev.label.replace(/\s*\(.*$/, '')} ends at ${fmtT(prevEnd)}`;
+    out.push({ what, setAt, actual: blk.start, late, causeKind, wakeNeeded: setAt - (blk.start - row.wake),
+               cause: travel >= 0.05 ? `${base} and getting there takes ${fmtD(travel)}` : base });
+  };
+  check('Practice', c.practiceStart[row.dt], 'Practice');
+  check('Game', c.gameStart?.[row.dt], 'Game');
+  return out;
+}
 
-  // Derive the target wind-down start from LP-allocated sleep and wake time
-  const windDownStart = r2((row.wake + 24) - row.Sleep - WIND_DOWN_DUR);
+// ═══════════════════════════════════════════════════════════════════════
+// DAY TEMPLATES — one description of each day type, read two ways:
+//   summed  → the LP budget (t.budget) and the fixed-time breakdown (t.fixed)
+//   walked  → the timeline on the clock (t.layout(lp))
+// Both read the same recipe, so the budget and the timeline cannot drift apart.
+// ═══════════════════════════════════════════════════════════════════════
 
-  function push(type, label, dur) {
-    if (dur >= 0.05) { blks.push({ start: cur, dur, type, label }); cur += dur; }
+// Anchors: clock-time events with a lead commute before and a trailing commute after.
+const ANCHORS = {
+  practice: {
+    present: (lp) => (lp.Practice || 0) >= 0.05,
+    depart:  (c, dt) => c.practiceStart[dt] - c.commute.toPractice,
+    lead:    (c) => ({ type: 'Commute', label: 'Commute to practice', hrs: c.commute.toPractice }),
+    // `at` = when the block really starts (later than the set time if the day ran late)
+    body:    (c, dt, lp, n, at) => ({ type: 'Practice',
+               label: `Practice (${c.sportProfile}${c.gameDay ? `, ${Math.max(0, dtg(n))}d to game` : ''}) · starts ${fmtT(at ?? c.practiceStart[dt])}`,
+               hrs: lp.Practice }),
+    trail:   (c) => ({ type: 'Commute', label: 'Commute home', hrs: c.commute.fromPractice }),
+    snapBodyToStart: false,
+    hwLabel: 'practice',
+  },
+  game: {
+    present: () => true,
+    depart:  (c, dt) => r2(c.gameStart[dt] - c.commute.toGame),
+    lead:    (c, dt) => ({ type: 'Commute',
+               label: `${dt === 'game_weekday' ? 'School → venue' : 'Commute to venue'} (game at ${fmtT(c.gameStart[dt])})`,
+               hrs: c.commute.toGame }),
+    body:    (c, dt, lp, n, at) => ({ type: 'Game', label: `Game · ${fmtT(at ?? c.gameStart[dt])} (${c.gameDuration}h)`, hrs: c.gameDuration }),
+    trail:   (c) => ({ type: 'Commute', label: 'Commute home', hrs: c.commute.fromGame }),
+    snapBodyToStart: true,
+    hwLabel: 'game',
+  },
+};
+
+// Recipe steps. Study steps are written out per day type on purpose: it preserves the
+// existing quirks (e.g. game_weekend has no study before dinner).
+const STEP_ROUTINE     = { fixed: () => ({ type: 'Morning Routine', label: 'Morning Routine', hrs: 0.5 }) };
+// `school: true` steps are dropped on days whose event skips school (no school, travel, morning test).
+const STEP_TO_SCHOOL   = { school: true, fixed: (c) => ({ type: 'Commute', label: 'Commute to school', hrs: c.commute.toSchool }) };
+const STEP_CLASSES     = { school: true, fixed: (c) => ({ type: 'Classes', label: `Classes (${c.classHours}h)`, hrs: c.classHours }) };
+const STEP_FROM_SCHOOL = { school: true, fixed: (c) => ({ type: 'Commute', label: 'Commute home', hrs: c.commute.fromSchool }) };
+const STEP_HOMEWORK    = { homework: 'all' };
+// studyBefore: the morning before lunch is usable study time on weekend / rest days
+const STEP_LUNCH       = { meal: 'Lunch',  at: () => 12.0,          studyBefore: true };
+const STEP_DINNER      = { meal: 'Dinner', at: (c) => c.dinnerTime, studyBefore: true };
+const STEP_DINNER_NO_STUDY = { meal: 'Dinner', at: (c) => c.dinnerTime, studyBefore: false };
+const STEP_STUDY_TO_BED    = { study: 'windDown' };
+// Weights: LP-sized, inserted by dayTemplate right after school (or after the morning on non-school days).
+const STEP_WEIGHTS         = { weights: true };
+// Homework fills the gap before the anchor's departure; the rest goes right after it.
+const aroundAnchor = (a) => [{ homework: 'before', anchor: a }, { study: 'anchor', anchor: a }, { anchor: a }, { homework: 'after', anchor: a }];
+
+const RECIPES = {
+  school:           [STEP_ROUTINE, STEP_TO_SCHOOL, STEP_CLASSES, STEP_FROM_SCHOOL, STEP_HOMEWORK, STEP_DINNER, STEP_STUDY_TO_BED],
+  friday:           [STEP_ROUTINE, STEP_TO_SCHOOL, STEP_CLASSES, STEP_FROM_SCHOOL, STEP_HOMEWORK, STEP_DINNER, STEP_STUDY_TO_BED],
+  practice_weekday: [STEP_ROUTINE, STEP_TO_SCHOOL, STEP_CLASSES, STEP_FROM_SCHOOL, ...aroundAnchor('practice'), STEP_DINNER, STEP_STUDY_TO_BED],
+  practice_weekend: [STEP_ROUTINE, { when: 'practice', then: aroundAnchor('practice'), else: [STEP_HOMEWORK] }, STEP_LUNCH, STEP_DINNER, STEP_STUDY_TO_BED],
+  game_weekday:     [STEP_ROUTINE, STEP_TO_SCHOOL, STEP_CLASSES, ...aroundAnchor('game'), STEP_DINNER, STEP_STUDY_TO_BED],
+  game_weekend:     [STEP_ROUTINE, ...aroundAnchor('game'), STEP_DINNER_NO_STUDY, STEP_STUDY_TO_BED],
+  rest:             [STEP_ROUTINE, STEP_LUNCH, STEP_HOMEWORK, STEP_DINNER, STEP_STUDY_TO_BED],
+};
+
+// dayTemplate(n, c = cfg) → { n, dt, wake, nextWake, dayLen, practiceHappens, slots, fixed, budget,
+//                             sleepLo, sleepHi, sleepWindow, lightsOut, adj, layout(lp) }
+//   dayLen — hours from this day's wake to the NEXT day's wake (Sun→Mon is 21.5h with a 10 am / 7:30 am
+//            pair; Sat→Sun is 25.5h). The night's sleep belongs to this day and ends at nextWake.
+//   fixed  — time the LP cannot allocate: [{ type, label, hrs }], including morning routine, wind-down
+//            and time to fall asleep
+//   budget — r2(dayLen − Σ fixed.hrs); the LP's per-day budget
+//   sleepWindow — hours from lights-out + time to fall asleep until nextWake; the plan never schedules
+//            more sleep than this (so it never asks for bed before lights-out) unless minSleep forces it
+//   sleepLo/sleepHi — LP bounds on sleep: [minSleep, min(maxSleep, window)], or [hi, hi] on hard
+//            full-sleep days (sick). Soft full-sleep days keep the range; the LP prices the shortfall.
+//   hwLo/hwHi — daily homework bounds (homeworkSchoolDayMin–3.5h school days, 0–3h otherwise and on
+//            sick days); the weekly total is set in the LP
+//   weightsHi — longest weights session allowed today (0 = no weights)
+//   adj    — dayAdjust(n): the day event / night-before / recovery-check adjustments applied here
+//   slots  — LP-sized quantities the timeline uses (Sleep, Dinner, Homework, Practice?, Weights?, Lunch?, Study:<name>…)
+//   layout(lp) → { tl, sleep }: pure; tl[0] is Sleep holding the ACTUAL sleep (≤ lp.Sleep)
+// Known gap: the budget reserves the practice commute whenever practice is allowed
+// (practiceHappens), but the timeline drops it if the LP picks ~0 practice — a linear
+// LP can't make the commute conditional. The extra time shows up as Free Time.
+function dayTemplate(n, c = cfg) {
+  const dt = getDT(n);
+  const adj = dayAdjust(n);
+  let recipe = RECIPES[dt];
+  if (adj.skipSchool) recipe = recipe.filter(s => !s.school);
+  if (adj.block) recipe = [recipe[0], { fixed: () => ({ type: 'Event', label: adj.block.label, hrs: adj.block.hrs }) }, ...recipe.slice(1)];
+  const weightsHi = getWeightsHi(n);
+  if (weightsHi > 0) {
+    const at = recipe.includes(STEP_FROM_SCHOOL) ? recipe.indexOf(STEP_FROM_SCHOOL) + 1 : (adj.block ? 2 : 1);
+    recipe = [...recipe.slice(0, at), STEP_WEIGHTS, ...recipe.slice(at)];
   }
+  const practiceHappens = getPB(n)[1] > 0;
+  const schoolDay = recipe.includes(STEP_CLASSES);
+  const sickDay = adj.event?.type === 'sick';
+  const hwLo = schoolDay && !sickDay ? Math.min(c.homeworkSchoolDayMin ?? 0.5, 3.5) : 0, hwHi = schoolDay ? 3.5 : 3;
+  const wake = wakeFor(n, c);
+  const nextWake = wakeFor(n + 1, c);   // Sunday (n = 7) looks at next Monday's date
+  const dayLen = r2(24 + nextWake - wake);
 
-  blks.push({ start:0, dur:0, type:"Sleep", label:"Sleep" }); // placeholder, overwritten below
+  const lightsOut = adj.lightsOut ?? nightHour(c.lightsOut ?? 12);
+  const latency = c.sleepLatency || 0;
+  const sleepWindow = r2(nextWake + 24 - lightsOut - latency);
+  // A "late night" event is a deliberate choice, so it may cut sleep below Min sleep (the plan is
+  // honest about it); otherwise Min sleep wins and the plan asks for bed before lights-out.
+  const sleepFloor = adj.lightsOut != null ? Math.min(c.minSleep, Math.max(0, sleepWindow)) : c.minSleep;
+  const sleepHi = Math.max(sleepFloor, Math.min(c.maxSleep, sleepWindow));
+  const sleepLo = adj.hardFullSleep ? sleepHi : sleepFloor;
 
-  // studyPlaced tracks hours placed per subject so pre/post dinner calls don't double-place
-  if (!row._studyPlaced) row._studyPlaced = {};
+  const planSteps = (steps) => steps.flatMap(s => s.when ? planSteps(practiceHappens ? s.then : s.else) : [s]);
+  const plan = planSteps(recipe);
 
-  // doStudy(untilTime?): place study blocks, respecting already-placed amounts.
-  // Stops at untilTime if given, otherwise places all remaining.
-  // FIX #3 in timeline: filter l >= 0 so test-day subjects sort into correct urgency position
-  function doStudy(untilTime) {
-    cfg.subjects
-      .map(s => ({ s, urg: sUrg(s, n-1), hrs: row["Study:" + s.name] || 0 }))
+  // Homework is LP-sized now (weekly amount), so it is not fixed time.
+  const fixed = [];
+  plan.forEach(s => {
+    if (s.fixed) fixed.push(s.fixed(c));
+    if (s.anchor && !s.homework && !s.study) {
+      if (s.anchor === 'practice' && !practiceHappens) return;
+      const a = ANCHORS[s.anchor];
+      fixed.push(a.lead(c, dt));
+      if (s.anchor === 'game') fixed.push({ type: 'Game', label: 'Game', hrs: c.gameDuration });
+      fixed.push(a.trail(c, dt));
+    }
+  });
+  fixed.push({ type: 'Wind Down', label: 'Wind down', hrs: WIND_DOWN_DUR });
+  if (latency > 0) fixed.push({ type: 'Falling Asleep', label: 'Falling asleep', hrs: latency });
+  const budget = r2(dayLen - fixed.reduce((a, f) => a + f.hrs, 0));
+
+  const slots = ['Sleep', 'Dinner', 'Homework'];
+  if (practiceHappens) slots.push('Practice');
+  if (weightsHi > 0) slots.push('Weights');
+  if (plan.some(s => s.meal === 'Lunch')) slots.push('Lunch');
+  c.subjects.forEach(s => slots.push('Study:' + s.name));
+
+  return { n, dt, wake, nextWake, dayLen, practiceHappens, slots, fixed, budget,
+           sleepLo, sleepHi, sleepWindow, lightsOut, adj, hwLo, hwHi, weightsHi,
+           layout: (lp) => layoutDay(n, dt, c, recipe, lp, wake, nextWake, latency) };
+}
+
+// Walks a recipe on the clock with a cursor, then places wind-down, sleep, and Free Time gaps.
+function layoutDay(n, dt, c, recipe, lp, wake, nextWake, latency) {
+  const blks = [{ start: 0, dur: 0, type: 'Sleep', label: 'Sleep' }]; // placeholder, overwritten below
+  const hw = lp.Homework ?? c.homework[dt];
+  // Target wind-down start from LP-allocated sleep, counted back from tomorrow's wake time
+  // (sleep, then the time it takes to fall asleep, then wind-down).
+  const windDownStart = r2((nextWake + 24) - lp.Sleep - latency - WIND_DOWN_DUR);
+  const placed = {};   // study hours placed per subject, so later study steps don't double-place
+  let cur = wake;
+  let hwPost = 0;
+  let dinnerDone = false;   // dinner already eaten before practice / a game
+
+  const push = (type, label, dur) => { if (dur >= 0.05) { blks.push({ start: cur, dur, type, label }); cur += dur; } };
+
+  // Place each subject's remaining study hours (most urgent first, one subject at a time) up to
+  // `until`. A studyBreakDuration break comes after every studyBreakInterval of continuous study
+  // (counted across subjects, so short reviews run back to back without a break each).
+  const every = c.studyBreakInterval > 0 ? c.studyBreakInterval : Infinity;
+  const brk = c.studyBreakDuration || 0;
+  let sinceBreak = 0;
+  const studyUntil = (until) => {
+    sinceBreak = 0;   // a new window (after dinner, practice…) starts fresh, no break needed
+    c.subjects
+      .map(s => ({ s, urg: sUrg(s, n - 1), hrs: lp['Study:' + s.name] || 0 }))
       .sort((a, b) => b.urg - a.urg)
       .forEach(({ s, hrs }) => {
-        const already = row._studyPlaced[s.name] || 0;
-        let remaining = r2(hrs - already);
-        if (remaining < 0.05) return;
-
-        const upcoming  = (s.testDays||[]).map(td => td - n).filter(l => l > 0);
+        const upcoming  = (s.testDays || []).map(td => td - n).filter(l => l > 0);
         const nearest   = upcoming.length ? Math.min(...upcoming) : null;
-        const allPassed = (s.testDays||[]).length > 0 && (s.testDays||[]).every(td => td <= n);
-        const tag = nearest != null ? ` · ${nearest}d to test`
-                  : allPassed      ? " · tests done" : "";
-
-        while (remaining > 0.05) {
-          if (untilTime !== undefined && cur >= untilTime - 0.01) break;
-          let chunk = Math.min(remaining, cfg.studyBreakInterval);
-          if (untilTime !== undefined) chunk = Math.min(chunk, r2(untilTime - cur));
-          if (chunk < 0.05) break;
-
-          push("Study", `Study: ${s.name}${tag}`, chunk);
-          row._studyPlaced[s.name] = r2((row._studyPlaced[s.name] || 0) + chunk);
-          remaining = r2(remaining - chunk);
-
-          if (remaining > 0.05 && cfg.studyBreakDuration > 0) {
-            if (untilTime === undefined || cur + cfg.studyBreakDuration <= untilTime)
-              push("Study Break", `Study break (${fmtD(cfg.studyBreakDuration)}) — ${s.name}`, cfg.studyBreakDuration);
+        const allPassed = (s.testDays || []).length > 0 && s.testDays.every(td => td <= n);
+        const tag = nearest != null ? ` · ${nearest}d to test` : allPassed ? ' · tests done' : '';
+        while (true) {
+          const remaining = r2(hrs - (placed[s.name] || 0));
+          if (remaining < 0.05) return;
+          if (sinceBreak >= every - 0.01) {
+            if (brk > 0) {
+              if (until - (cur + brk) < 0.05) return;
+              push('Study Break', `Study break (${fmtD(brk)})`, brk);
+            }
+            sinceBreak = 0;
           }
+          if (cur >= until - 0.01) return;
+          const chunk = Math.min(remaining, r2(every - sinceBreak), r2(until - cur));
+          if (chunk < 0.05) return;
+          push('Study', `Study: ${s.name}${tag}`, chunk);
+          placed[s.name] = r2((placed[s.name] || 0) + chunk);
+          sinceBreak = r2(sinceBreak + chunk);
         }
       });
-  }
+  };
 
-  push("Morning Routine", "Morning Routine", 0.5);
-
-  if (dt === "school" || dt === "friday") {
-    push("Commute", "Commute to school", cfg.commute.toSchool);
-    push("Classes", `Classes (${cls}h)`, cls);
-    push("Commute", "Commute home", cfg.commute.fromSchool);
-    push("Homework", "Homework", hw);
-    const dinnerAt = Math.max(cur, cfg.dinnerTime);
-    doStudy(dinnerAt);
-    cur = dinnerAt;
-    push("Dinner", `Dinner (${fmtD(row.Dinner)})`, row.Dinner);
-    doStudy(windDownStart);
-
-  } else if (dt === "practice_weekday") {
-    push("Commute", "Commute to school", cfg.commute.toSchool);
-    push("Classes", `Classes (${cls}h)`, cls);
-    push("Commute", "Commute home", cfg.commute.fromSchool);
-
-    const pracCommuteStart = cfg.practiceStart.practice_weekday - cfg.commute.toPractice;
-
-    // Homework and study at home before practice commute
-    const preGap = r2(Math.max(0, pracCommuteStart - cur));
-    const hwPre  = Math.min(hw, preGap);
-    if (hwPre >= 0.05) push("Homework", "Homework (before practice)", hwPre);
-    const hwPost = r2(hw - hwPre);
-
-    doStudy(pracCommuteStart);  // study up to practice commute start
-
-    if (row.Practice >= 0.05) {
-      cur = Math.max(cur, pracCommuteStart);
-      push("Commute", "Commute to practice", cfg.commute.toPractice);
-      push("Practice", `Practice (${cfg.sportProfile}${cfg.gameDay ? `, ${Math.max(0,row.dtg)}d to game` : ''}) · starts ${fmtT(cfg.practiceStart.practice_weekday)}`, row.Practice);
-      push("Commute", "Commute home", cfg.commute.fromPractice);
+  const run = (steps) => steps.forEach(s => {
+    if (s.when) return run(ANCHORS[s.when].present(lp) ? s.then : s.else);
+    if (s.fixed) { const f = s.fixed(c); return push(f.type, f.label, f.hrs); }
+    if (s.weights) return push('Weights', `Weights (${fmtD(lp.Weights || 0)})`, lp.Weights || 0);
+    if (s.homework === 'all') return push('Homework', 'Homework', hw);
+    if (s.homework === 'before') {
+      const a = ANCHORS[s.anchor];
+      const depart = a.depart(c, dt), dinnerLen = lp.Dinner || 0;
+      // Eat before leaving when the dinner setting falls before departure: at dinner time if it
+      // fits, otherwise just before leaving. Saves a 9 PM dinner after an evening practice.
+      let slot = null;
+      if (a.present(lp) && dinnerLen >= 0.05 && c.dinnerTime < depart) {
+        slot = c.dinnerTime + dinnerLen <= depart + 1e-9 ? Math.max(cur, c.dinnerTime) : depart - dinnerLen;
+        if (slot < cur - 1e-9 || slot + dinnerLen > depart + 1e-9) slot = null;
+      }
+      if (slot == null) {
+        const pre = Math.min(hw, r2(Math.max(0, depart - cur)));
+        if (pre >= 0.05) push('Homework', `Homework (before ${a.hwLabel})`, pre);
+        hwPost = r2(hw - pre);
+        return;
+      }
+      const pre1 = Math.min(hw, r2(Math.max(0, slot - cur)));
+      if (pre1 >= 0.05) push('Homework', `Homework (before ${a.hwLabel})`, pre1);
+      studyUntil(slot);
+      cur = Math.max(cur, slot);
+      push('Dinner', `Dinner (${fmtD(dinnerLen)}) · before ${a.hwLabel}`, dinnerLen);
+      dinnerDone = true;
+      const pre2 = Math.min(r2(hw - pre1), r2(Math.max(0, depart - cur)));
+      if (pre2 >= 0.05) push('Homework', `Homework (before ${a.hwLabel})`, pre2);
+      hwPost = r2(hw - pre1 - pre2);
+      return;
     }
-
-    if (hwPost >= 0.05) push("Homework", "Homework (after practice)", hwPost);
-
-    const dinnerAt2 = Math.max(cur, cfg.dinnerTime);
-    doStudy(dinnerAt2);
-    cur = dinnerAt2;
-    push("Dinner", `Dinner (${fmtD(row.Dinner)})`, row.Dinner);
-    doStudy(windDownStart);
-
-  } else if (dt === "practice_weekend") {
-    if (row.Practice >= 0.05) {
-      const pracCommuteStart = cfg.practiceStart.practice_weekend - cfg.commute.toPractice;
-
-      // Fill the pre-practice window with homework and study, same as practice_weekday
-      const preGapWE = r2(Math.max(0, pracCommuteStart - cur));
-      const hwPreWE  = Math.min(hw, preGapWE);
-      if (hwPreWE >= 0.05) push("Homework", "Homework (before practice)", hwPreWE);
-      const hwPostWE = r2(hw - hwPreWE);
-      doStudy(pracCommuteStart);
-
-      cur = Math.max(cur, pracCommuteStart);
-      push("Commute", "Commute to practice", cfg.commute.toPractice);
-      push("Practice", `Practice (${cfg.sportProfile}${cfg.gameDay ? `, ${Math.max(0,row.dtg)}d to game` : ''}) · starts ${fmtT(cfg.practiceStart.practice_weekend)}`, row.Practice);
-      push("Commute", "Commute home", cfg.commute.fromPractice);
-
-      if (hwPostWE >= 0.05) push("Homework", "Homework (after practice)", hwPostWE);
-    } else {
-      push("Homework", "Homework", hw);
+    if (s.homework === 'after') {
+      if (hwPost >= 0.05) push('Homework', `Homework (after ${ANCHORS[s.anchor].hwLabel})`, hwPost);
+      return;
     }
-    cur = Math.max(cur, 12.0);
-    push("Lunch", `Lunch (${fmtD(row.Lunch)})`, row.Lunch);
-    const dinnerAtWE = Math.max(cur, cfg.dinnerTime);
-    doStudy(dinnerAtWE);
-    cur = dinnerAtWE;
-    push("Dinner", `Dinner (${fmtD(row.Dinner)})`, row.Dinner);
-    doStudy(windDownStart);
+    if (s.study === 'anchor')   return studyUntil(ANCHORS[s.anchor].depart(c, dt));
+    if (s.study === 'windDown') return studyUntil(windDownStart);
+    if (s.anchor) {
+      const a = ANCHORS[s.anchor];
+      if (!a.present(lp)) return;
+      cur = Math.max(cur, a.depart(c, dt));
+      const lead = a.lead(c, dt); push(lead.type, lead.label, lead.hrs);
+      if (a.snapBodyToStart) cur = Math.max(cur, c.gameStart[dt]);
+      const body = a.body(c, dt, lp, n, cur); push(body.type, body.label, body.hrs);
+      const trail = a.trail(c, dt); push(trail.type, trail.label, trail.hrs);
+      return;
+    }
+    if (s.meal) {
+      if (s.meal === 'Dinner' && dinnerDone) return;
+      const at = Math.max(cur, s.at(c));
+      if (s.studyBefore) studyUntil(at);
+      cur = at;
+      return push(s.meal, `${s.meal} (${fmtD(lp[s.meal])})`, lp[s.meal]);
+    }
+    throw new Error('dayTemplate: unknown recipe step ' + JSON.stringify(s));
+  });
 
-  } else if (dt === "game_weekday") {
-    push("Commute", "Commute to school", cfg.commute.toSchool);
-    push("Classes", `Classes (${cls}h)`, cls);
-    const gameStartWD = cfg.gameStart.game_weekday;
-    const departWD = r2(gameStartWD - cfg.commute.toGame);
-
-    // Use the pre-game window for homework and study
-    const preGameGap = r2(Math.max(0, departWD - cur));
-    const hwPreGame  = Math.min(hw, preGameGap);
-    if (hwPreGame >= 0.05) push("Homework", "Homework (before game)", hwPreGame);
-    const hwPostGame = r2(hw - hwPreGame);
-    doStudy(departWD);
-
-    cur = Math.max(cur, departWD);
-    push("Commute", `School → venue (game at ${fmtT(gameStartWD)})`, cfg.commute.toGame);
-    cur = Math.max(cur, gameStartWD);
-    push("Game", `Game · ${fmtT(gameStartWD)} (${cfg.gameDuration}h)`, cfg.gameDuration);
-    push("Commute", "Commute home", cfg.commute.fromGame);
-    if (hwPostGame >= 0.05) push("Homework", "Homework (after game)", hwPostGame);
-    const dinnerAtGW = Math.max(cur, cfg.dinnerTime);
-    doStudy(dinnerAtGW);
-    cur = dinnerAtGW;
-    push("Dinner", `Dinner (${fmtD(row.Dinner)})`, row.Dinner);
-    doStudy(windDownStart);
-
-  } else if (dt === "game_weekend") {
-    const gameStartWE = cfg.gameStart.game_weekend;
-    const departWE = r2(gameStartWE - cfg.commute.toGame);
-
-    // Use the pre-game window for homework and study
-    const preGameGapWE = r2(Math.max(0, departWE - cur));
-    const hwPreGameWE  = Math.min(hw, preGameGapWE);
-    if (hwPreGameWE >= 0.05) push("Homework", "Homework (before game)", hwPreGameWE);
-    const hwPostGameWE = r2(hw - hwPreGameWE);
-    doStudy(departWE);
-
-    cur = Math.max(cur, departWE);
-    push("Commute", `Commute to venue (game at ${fmtT(gameStartWE)})`, cfg.commute.toGame);
-    cur = Math.max(cur, gameStartWE);
-    push("Game", `Game · ${fmtT(gameStartWE)} (${cfg.gameDuration}h)`, cfg.gameDuration);
-    push("Commute", "Commute home", cfg.commute.fromGame);
-    if (hwPostGameWE >= 0.05) push("Homework", "Homework (after game)", hwPostGameWE);
-    const dinnerAtGWE = Math.max(cur, cfg.dinnerTime);
-    cur = dinnerAtGWE;
-    push("Dinner", `Dinner (${fmtD(row.Dinner)})`, row.Dinner);
-    doStudy(windDownStart);
-
-  } else { // rest
-    cur = Math.max(cur, 12.0);
-    push("Lunch", `Lunch (${fmtD(row.Lunch)})`, row.Lunch);
-    push("Homework", "Homework", hw);
-    const dinnerAtRest = Math.max(cur, cfg.dinnerTime);
-    doStudy(dinnerAtRest);
-    cur = dinnerAtRest;
-    push("Dinner", `Dinner (${fmtD(row.Dinner)})`, row.Dinner);
-    doStudy(windDownStart);
-
-  }
+  run(recipe);
 
   // Wind-down: place at the LP-scheduled bedtime, or right after last activity if it ran late.
+  // `overrun` = how far the evening ran past the planned wind-down (compute() trims schoolwork for it).
+  const overrun = r2(Math.max(0, cur - windDownStart));
   cur = Math.max(cur, windDownStart);
   const windDownEnd = r2(cur + WIND_DOWN_DUR);
-  push("Wind Down", `Wind down → sleep at ${fmtT(windDownEnd)}`, WIND_DOWN_DUR);
+  push('Wind Down', latency >= 0.05 ? `Wind down → lights out at ${fmtT(windDownEnd)}` : `Wind down → sleep at ${fmtT(windDownEnd)}`, WIND_DOWN_DUR);
+  push('Falling Asleep', `Falling asleep (${fmtD(latency)})`, latency);
 
   // Recompute actual sleep from real bedtime so the bar always matches what's shown.
-  const sleepStart  = windDownEnd % 24;
-  const actualSleep = r2(((row.wake - sleepStart) + 24) % 24);
-  blks[0] = { start: sleepStart, dur: actualSleep, type: "Sleep",
-    label: `Sleep  (${fmtD(actualSleep)})  ${fmtT(sleepStart)} → ${fmtT(row.wake)}` };
+  const sleepStart  = r2(windDownEnd + (latency >= 0.05 ? latency : 0)) % 24;
+  const actualSleep = r2(((nextWake - sleepStart) + 24) % 24);
+  blks[0] = { start: sleepStart, dur: actualSleep, type: 'Sleep',
+    label: `Sleep  (${fmtD(actualSleep)})  ${fmtT(sleepStart)} → ${fmtT(nextWake)}` };
 
   // Gap-fill: any gap ≥ 3 min between blocks becomes Free Time
   const dayBlks = blks.slice(1).sort((a, b) => a.start - b.start);
-  const filled  = [];
-  for (let i = 0; i < dayBlks.length; i++) {
+  const filled = [];
+  for (const b of dayBlks) {
     const prev    = filled.length ? filled[filled.length - 1] : null;
-    const prevEnd = prev ? r2(prev.start + prev.dur) : row.wake;
-    const gap     = r2(dayBlks[i].start - prevEnd);
-    if (gap >= 0.05)
-      filled.push({ start: prevEnd, dur: gap, type:"Free Time", label:`Free time  (${fmtD(gap)})` });
-    filled.push(dayBlks[i]);
+    const prevEnd = prev ? r2(prev.start + prev.dur) : wake;
+    const gap     = r2(b.start - prevEnd);
+    if (gap >= 0.05) filled.push({ start: prevEnd, dur: gap, type: 'Free Time', label: `Free time  (${fmtD(gap)})` });
+    filled.push(b);
   }
-  return [blks[0], ...filled];
+  const tl = [blks[0], ...filled];
+  const studyPlaced = r2(tl.filter(b => b.type === 'Study').reduce((a, b) => a + b.dur, 0));
+  return { tl, sleep: r2(tl[0].dur), overrun, studyPlaced };
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -1081,26 +1501,35 @@ function toX(t) { return (((t - TLS) % 24 + 24) % 24) / 24 * 100; }
 
 function renderBlocks(row) {
   return row.tl.map(b => {
-    const c = BC[b.type] || "#666";
+    const c = BC[b.type] || "#8c7b6b";
     const tipText = `${b.label} | ${fmtT(b.start)}–${fmtT(b.start + b.dur)} (${fmtD(b.dur)})`;
     const attr = `class="tblk" data-tip="${tipText.replace(/"/g,'&quot;')}"`;
     if (b.type === "Sleep") {
+      // Right edge: tonight's sleep, from bedtime to the end of the track.
+      // Left edge: LAST night's sleep (the previous day's block), which ends at this day's wake.
+      // Tonight's sleep ends at tomorrow's wake, so it doesn't belong on this row's left edge.
+      const prev = sched[(row.n + 5) % 7]?.tl[0] ?? b;
+      const prevTip = `${prev.label} | ${fmtT(prev.start)}–${fmtT(row.wake)}`;
       const xS = toX(b.start).toFixed(2);
-      const xE = toX(((b.start + b.dur) % 24 + 24) % 24).toFixed(2);
-      return `<div ${attr} style="left:${xS}%;right:0;background:${c}40;border-left:2px solid ${c}"></div>`
-           + `<div ${attr} style="left:0;width:${xE}%;background:${c}40;border-right:2px solid ${c}"></div>`;
+      const xE = toX(row.wake).toFixed(2);
+      return `<div ${attr} style="left:${xS}%;right:0;background:${c}70;border-left:2px solid ${c}"></div>`
+           + `<div class="tblk" data-tip="${prevTip.replace(/"/g,'&quot;')}" style="left:0;width:${xE}%;background:${c}70;border-right:2px solid ${c}"></div>`;
     }
     const x1 = toX(b.start);
     const w  = Math.max(0.3, toX(b.start + b.dur) - x1).toFixed(2);
-    return `<div ${attr} style="left:${x1.toFixed(2)}%;width:${w}%;background:${c}40;border-left:2px solid ${c}"></div>`;
+    return `<div ${attr} style="left:${x1.toFixed(2)}%;width:${w}%;background:${c}70;border-left:2px solid ${c}"></div>`;
   }).join("");
 }
 
 function renderSummary() {
   const weekPerf  = r2(sched.reduce((a, r) => a + r.perf, 0));
-  const totS      = r2(sched.reduce((a, r) => a + r.stTot, 0));
+  const totS      = r2(sched.reduce((a, r) => a + (r.studyPlaced ?? r.stTot), 0));   // what's actually on the timeline
   const avgSl     = (sched.reduce((a, r) => a + (r.tl[0]?.dur ?? r.Sleep), 0) / 7).toFixed(1);
   const totPrac   = r2(sched.reduce((a, r) => a + (r.Practice || 0), 0));
+  const totWts    = r2(sched.reduce((a, r) => a + (r.Weights || 0), 0));
+  const totHw     = r2(sched.reduce((a, r) => a + (r.Homework || 0), 0));
+  const hwTyp     = r2(sched.reduce((a, r) => a + (cfg.homework[r.dt] || 0), 0));
+  const trainMin  = r2(cfg.trainingMinFrac * (cfg.swimWeekMax + cfg.weightsWeekMax));
   const totFree   = r2(sched.reduce((a, r) => a + (r.Free || 0), 0));
 
   const perfCtx = perfAlpha > 0.65 ? "performance-weighted" :
@@ -1120,16 +1549,21 @@ function renderSummary() {
     <div class="sum-c">
       <div class="sum-l">Avg sleep</div>
       <div class="sum-v">${avgSl}h</div>
-      <div class="sum-s">min ${cfg.minSleep}h · max ${cfg.maxSleep}h</div>
+      <div class="sum-s">lights out ${fmtT(cfg.lightsOut)} · min ${cfg.minSleep}h · max ${cfg.maxSleep}h</div>
     </div>
     <div class="sum-c">
-      <div class="sum-l">Total practice</div>
-      <div class="sum-v" style="color:#8b5cf6">${fmtD(totPrac)}</div>
-      <div class="sum-s">${sched.filter(r=>r.isPrac).length} practice days</div>
+      <div class="sum-l">Training</div>
+      <div class="sum-v" style="color:#8e3b5c">${fmtD(r2(totPrac + totWts))}</div>
+      <div class="sum-s">swim ${fmtD(totPrac)} · weights ${fmtD(totWts)} · range ${trainMin}–${r2(cfg.swimWeekMax + cfg.weightsWeekMax)}h</div>
+    </div>
+    <div class="sum-c">
+      <div class="sum-l">Homework</div>
+      <div class="sum-v" style="color:#7d5233">${fmtD(totHw)}</div>
+      <div class="sum-s">typical ${hwTyp}h · range ${r2(cfg.homeworkMinFrac * hwTyp)}–${r2(cfg.homeworkMaxFrac * hwTyp)}h</div>
     </div>
     <div class="sum-c">
       <div class="sum-l">Total free time</div>
-      <div class="sum-v" style="color:#0ea5e9">${fmtD(totFree)}</div>
+      <div class="sum-v" style="color:#3f7f99">${fmtD(totFree)}</div>
       <div class="sum-s">floor: ${cfg.freeFloor}h/wk</div>
     </div>`;
 }
@@ -1174,22 +1608,27 @@ function renderCfg() {
 
 
 
-  document.getElementById("cfg-body").innerHTML = `
-    <div class="cfg-body">
-
-
-      <!-- ── Sliders ───────────────────────────────────────── -->
-      <div class="cfg-section full-col">
-        <div class="cfg-section-title">Priority Sliders</div>
+  const accOpen = (key, title) => `
+    <div class="cfg-acc">
+      <div class="cfg-acc-hdr" onclick="toggleCfgSection('${key}')">
+        <span>${title}</span>
+        <span class="cfg-acc-arr">${cfgOpenSections.has(key) ? "▴" : "▾"}</span>
       </div>
+      <div class="cfg-acc-body" style="display:${cfgOpenSections.has(key) ? "flex" : "none"}">`;
+  const accClose = `</div></div>`;
+
+  document.getElementById("cfg-body").innerHTML = `
+    <div>
+
+      ${accOpen("priority", `Priority Sliders`)}
 
       <div class="cfg-row full-col" style="padding:0">
         <div class="tradeoff-row" style="margin-bottom:8px">
           <span class="tradeoff-lbl tradeoff-lbl-w">Recovery <span class="help-icon" data-tip="Shifts the objective between recovery (free time, meals) and performance (study, practice). At max recovery, the LP protects sleep and free time. At max performance, it maximises urgency-weighted study and practice.">?</span></span>
           <div class="tradeoff-track">
             <input type="range" class="tradeoff-slider" id="perf-slider"
-              min="0" max="1" step="0.01" value="${perfAlpha}"
-              oninput="setPerfAlpha(+this.value)">
+              min="1" max="10" step="0.1" value="${toScale(perfAlpha)}"
+              oninput="setPerfAlpha(fromScale(this.value))" onchange="refresh()">
             <div class="tradeoff-labels">
               <span>sleep · free time</span><span>balanced</span><span>study · practice</span>
             </div>
@@ -1201,18 +1640,18 @@ function renderCfg() {
           }</span>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:12px;padding-right:4px">
-          <span style="font-size:11px;color:var(--text3);margin-right:6px">value:</span>
-          <input type="number" id="perf-alpha-input" value="${perfAlpha}" min="0" max="1" step="0.01"
+          <span style="font-size:11px;color:var(--text3);margin-right:6px">scale (1–10):</span>
+          <input type="number" id="perf-alpha-input" value="${toScale(perfAlpha)}" min="1" max="10" step="0.1"
             style="width:64px;font-size:12px;padding:3px 6px"
-            onchange="const s=document.getElementById('perf-slider');if(s)s.value=+this.value;setPerfAlpha(+this.value)">
+            onchange="const t=fromScale(this.value);const s=document.getElementById('perf-slider');if(s)s.value=toScale(t);setPerfAlpha(t);refresh()">
         </div>
 
         <div class="tradeoff-row" style="margin-bottom:8px">
           <span class="tradeoff-lbl tradeoff-lbl-a">Academics <span class="help-icon" data-tip="How much study urgency it takes to start cutting practice time. Low = a little urgency cuts practice hard; high = practice is protected even under heavy study load.">?</span></span>
           <div class="tradeoff-track">
             <input type="range" class="tradeoff-slider tradeoff-slider-ap" id="ap-slider"
-              min="0" max="1" step="0.01" value="${apToSlider(cfg.academicPressureThreshold)}"
-              oninput="setAcadPressure(+this.value)">
+              min="1" max="10" step="0.1" value="${toScale(apToSlider(cfg.academicPressureThreshold))}"
+              oninput="setAcadPressure(fromScale(this.value))" onchange="refresh()">
             <div class="tradeoff-labels">
               <span>tests cut practice</span><span>balanced</span><span>practice protected</span>
             </div>
@@ -1225,24 +1664,24 @@ function renderCfg() {
           })()}</span>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:12px;padding-right:4px">
-          <span style="font-size:11px;color:var(--text3);margin-right:6px">threshold:</span>
-          <input type="number" id="ap-threshold-input-2" value="${cfg.academicPressureThreshold}" min="0.5" max="5" step="0.1"
+          <span style="font-size:11px;color:var(--text3);margin-right:6px">scale (1–10):</span>
+          <input type="number" id="ap-threshold-input-2" value="${toScale(apToSlider(cfg.academicPressureThreshold))}" min="1" max="10" step="0.1"
             style="width:64px;font-size:12px;padding:3px 6px"
-            onchange="const t=apToSlider(+this.value);const s=document.getElementById('ap-slider');if(s)s.value=t;setAcadPressure(t)">
+            onchange="const t=fromScale(this.value);const s=document.getElementById('ap-slider');if(s)s.value=toScale(t);setAcadPressure(t);refresh()">
         </div>
 
         <div class="tradeoff-row" style="margin-bottom:8px">
-          <span class="tradeoff-lbl" style="color:#22c55e">Light <span class="help-icon" data-tip="Sets the urgency scale: weight × (scale ÷ days until test). Higher = more aggressive front-loading of study before exams. Internally sets the urgency scale parameter.">?</span></span>
+          <span class="tradeoff-lbl" style="color:#5f7d1f">Light <span class="help-icon" data-tip="Sets the urgency scale: weight × (scale ÷ days until test). Higher = more aggressive front-loading of study before exams. Internally sets the urgency scale parameter.">?</span></span>
           <div class="tradeoff-track">
             <input type="range" class="tradeoff-slider" id="urgency-slider"
-              min="0" max="1" step="0.01" value="${urgencyToSlider(cfg.urgencyScale)}"
-              style="background:linear-gradient(to right,#22c55e,#f59e0b,#ef4444)"
-              oninput="setUrgencyScale(+this.value)">
+              min="1" max="10" step="0.1" value="${toScale(urgencyToSlider(cfg.urgencyScale))}"
+              style="background:linear-gradient(to right,#5f7d1f,#a8770f,#b03a2e)"
+              oninput="setUrgencyScale(fromScale(this.value))" onchange="refresh()">
             <div class="tradeoff-labels">
               <span>light studying</span><span>moderate</span><span>heavy cramming</span>
             </div>
           </div>
-          <span class="tradeoff-lbl" style="color:#ef4444;text-align:right">Heavy</span>
+          <span class="tradeoff-lbl" style="color:#b03a2e;text-align:right">Heavy</span>
           <span class="tradeoff-readout" id="urgency-readout">${(() => {
             const t = urgencyToSlider(cfg.urgencyScale);
             return t < 0.2 ? 'very light' : t < 0.4 ? 'light' :
@@ -1250,17 +1689,14 @@ function renderCfg() {
           })()}</span>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:4px;padding-right:4px">
-          <span style="font-size:11px;color:var(--text3);margin-right:6px">urgency scale:</span>
-          <input type="number" id="urgency-scale-input-2" value="${cfg.urgencyScale}" min="0.5" max="6" step="0.1"
+          <span style="font-size:11px;color:var(--text3);margin-right:6px">scale (1–10):</span>
+          <input type="number" id="urgency-scale-input-2" value="${toScale(urgencyToSlider(cfg.urgencyScale))}" min="1" max="10" step="0.1"
             style="width:64px;font-size:12px;padding:3px 6px"
-            onchange="const t=urgencyToSlider(+this.value);const s=document.getElementById('urgency-slider');if(s)s.value=t;setUrgencyScale(t)">
+            onchange="const t=fromScale(this.value);const s=document.getElementById('urgency-slider');if(s)s.value=toScale(t);setUrgencyScale(t);refresh()">
         </div>
       </div>
 
-      <!-- ── Game & Sport ─────────────────────────────────── -->
-      <div class="cfg-section full-col">
-        <div class="cfg-section-title">Game &amp; Sport</div>
-      </div>
+      ${accClose}${accOpen("game", `Game &amp; Sport`)}
       <div class="cfg-row">
         <span class="cfg-lbl">Sport profile <span class="help-icon" data-tip="Taper — peaks 4d out, drops before game. Maintain — steady load all week. Ramp — builds heaviest near game day.">?</span></span>
         <select onchange="cfg.sportProfile=this.value;refresh()">
@@ -1279,21 +1715,39 @@ function renderCfg() {
         <input type="number" value="${cfg.gameDuration}" min="1" max="4" step="0.5" onchange="cfg.gameDuration=+this.value;refresh()">
       </div>
 
-      <!-- ── Practice ──────────────────────────────────────── -->
-      <div class="cfg-section full-col">
-        <div class="cfg-section-title">Practice</div>
-      </div>
+      ${accClose}${accOpen("practice", `Practice`)}
       <div class="cfg-row full-col">
         <span class="cfg-lbl">Practice days</span>
         <div class="pd-checks">${pdc}</div>
       </div>
       <div class="cfg-row">
-        <span class="cfg-lbl">Max (hrs) <span class="help-icon" data-tip="Hard ceiling on practice. Profile percentages are applied to this value.">?</span></span>
+        <span class="cfg-lbl">Swim max / session (hrs) <span class="help-icon" data-tip="Longest single swim practice. The sport profile shapes each day's ceiling below this; the optimizer picks the actual amount.">?</span></span>
         <input type="number" value="${cfg.practiceMax}" min="0.5" max="6" step="0.25" onchange="cfg.practiceMax=+this.value;refresh()">
       </div>
       <div class="cfg-row">
-        <span class="cfg-lbl">Min (hrs) <span class="help-icon" data-tip="Absolute floor. 0 = athlete can always skip.">?</span></span>
-        <input type="number" value="${cfg.practiceMin}" min="0" max="${cfg.practiceMax}" step="0.25" onchange="cfg.practiceMin=Math.min(+this.value,cfg.practiceMax);refresh()">
+        <span class="cfg-lbl">Swim max / week (hrs)</span>
+        <input type="number" value="${cfg.swimWeekMax}" min="0" max="30" step="0.5" onchange="cfg.swimWeekMax=+this.value;refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Weights max / week (hrs)</span>
+        <input type="number" value="${cfg.weightsWeekMax}" min="0" max="10" step="0.5" onchange="cfg.weightsWeekMax=+this.value;refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Weights max / session (hrs)</span>
+        <input type="number" value="${cfg.weightsSessionMax}" min="0" max="3" step="0.25" onchange="cfg.weightsSessionMax=+this.value;refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Min training (% of max) <span class="help-icon" data-tip="Weekly swim + weights must reach this share of (swim max + weights max). The optimizer decides everything between the minimum and the maximums.">?</span></span>
+        <input type="number" value="${Math.round(cfg.trainingMinFrac * 100)}" min="0" max="100" step="5" onchange="cfg.trainingMinFrac=+this.value/100;refresh()">
+        <span class="hw-unit">= ${r2(cfg.trainingMinFrac * (cfg.swimWeekMax + cfg.weightsWeekMax))}h / week</span>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Min per practice day (hrs) <span class="help-icon" data-tip="On every practice day, swim at least this much, so the plan can't skip practices outright. Lowered automatically to any soft cap (travel, test, recovery check); 0 on rest and sick days.">?</span></span>
+        <input type="number" value="${cfg.practiceDayMin}" min="0" max="${cfg.practiceMax}" step="0.25" onchange="cfg.practiceDayMin=Math.min(+this.value,cfg.practiceMax);refresh()">
+      </div>
+      <div class="cfg-row full-col">
+        <span class="cfg-lbl">Weights days <span class="help-icon" data-tip="Days with a weights session, placed right after school (or mid-morning on non-school days). Never on a game day or the day after.">?</span></span>
+        <div class="pd-checks">${DAYS.map((d, i) => `<label class="pd-lbl"><input type="checkbox" ${(cfg.weightsDays || []).includes(i+1) ? "checked" : ""} onchange="toggleWeightsDay(${i+1},this.checked)">${d}</label>`).join("")}</div>
       </div>
       <div class="cfg-row">
         <span class="cfg-lbl">Game weekday time <span class="help-icon" data-tip="When the game begins on a weekday. The commute to the venue is calculated from end of classes to this time.">?</span></span>
@@ -1316,10 +1770,7 @@ function renderCfg() {
         <span class="hw-unit" style="font-size:11px;color:var(--text2)">${fmtT(cfg.practiceStart.practice_weekend)}</span>
       </div>
 
-      <!-- ── Commute ────────────────────────────────────────── -->
-      <div class="cfg-section full-col">
-        <div class="cfg-section-title">Commute</div>
-      </div>
+      ${accClose}${accOpen("commute", `Commute`)}
       <div class="cfg-row full-col">
         <div class="hw-grid">
           <div class="hw-row"><span class="hw-lbl">Home → School</span><input type="number" value="${Math.round(cfg.commute.toSchool*60)}" min="0" max="120" step="5" onchange="cfg.commute.toSchool=+this.value/60;refresh()" style="width:64px"><span class="hw-unit">min</span></div>
@@ -1331,27 +1782,30 @@ function renderCfg() {
         </div>
       </div>
 
-      <!-- ── Schedule ───────────────────────────────────────── -->
-      <div class="cfg-section full-col">
-        <div class="cfg-section-title">Schedule</div>
-      </div>
+      ${accClose}${accOpen("schedule", `Schedule`)}
       <div class="cfg-row">
         <span class="cfg-lbl">Class hours / day</span>
         <input type="number" value="${cfg.classHours}" min="4" max="9" step="0.5" onchange="cfg.classHours=+this.value;refresh()">
       </div>
       <div class="cfg-row full-col">
-        <span class="cfg-lbl">Homework (hrs)</span>
+        <span class="cfg-lbl">Homework — typical hours per day <span class="help-icon" data-tip="A typical week's homework. The weekly total of these sets the range below; the optimizer decides each day's actual amount (0.5–3.5h on school days, 0–3h otherwise).">?</span></span>
         <div class="hw-grid">${hwRows}</div>
+      </div>
+      <div class="cfg-row full-col">
+        ${(() => { const typ = r2(sched.reduce((a, r) => a + (cfg.homework[r.dt] || 0), 0));
+          return `<span class="cfg-lbl">Weekly homework range — typical ${typ}h → ${r2(cfg.homeworkMinFrac * typ)}–${r2(cfg.homeworkMaxFrac * typ)}h</span>`; })()}
+        <div class="hw-grid">
+          <div class="hw-row"><span class="hw-lbl">Min (% of typical)</span><input type="number" value="${Math.round(cfg.homeworkMinFrac * 100)}" min="0" max="100" step="5" onchange="cfg.homeworkMinFrac=+this.value/100;refresh()" style="width:64px"><span class="hw-unit">%</span></div>
+          <div class="hw-row"><span class="hw-lbl">Max (% of typical)</span><input type="number" value="${Math.round(cfg.homeworkMaxFrac * 100)}" min="100" max="200" step="5" onchange="cfg.homeworkMaxFrac=+this.value/100;refresh()" style="width:64px"><span class="hw-unit">%</span></div>
+          <div class="hw-row"><span class="hw-lbl" data-tip="Homework floor on each school day (not on sick days), since it's usually due the next day.">Min per school day</span><input type="number" value="${cfg.homeworkSchoolDayMin}" min="0" max="3.5" step="0.25" onchange="cfg.homeworkSchoolDayMin=Math.min(+this.value,3.5);refresh()" style="width:64px"><span class="hw-unit">hrs</span></div>
+        </div>
       </div>
       <div class="cfg-row full-col">
         <span class="cfg-lbl">Wake-up time</span>
         <div class="hw-grid">${wakeRows}</div>
       </div>
 
-      <!-- ── Sleep & Meals ──────────────────────────────────── -->
-      <div class="cfg-section full-col">
-        <div class="cfg-section-title">Sleep &amp; Meals</div>
-      </div>
+      ${accClose}${accOpen("sleep", `Sleep &amp; Meals`)}
       <div class="cfg-row">
         <span class="cfg-lbl">Min sleep (hrs) <span class="help-icon" data-tip="LP lower bound on sleep — the optimizer will never schedule less than this per night.">?</span></span>
         <input type="number" value="${cfg.minSleep}" min="4" max="12" step="0.5" onchange="cfg.minSleep=Math.min(+this.value,cfg.maxSleep);refresh()">
@@ -1359,6 +1813,14 @@ function renderCfg() {
       <div class="cfg-row">
         <span class="cfg-lbl">Max sleep (hrs) <span class="help-icon" data-tip="LP upper bound on sleep. The optimizer may schedule more sleep on lighter days when budget allows.">?</span></span>
         <input type="number" value="${cfg.maxSleep}" min="6" max="14" step="0.5" onchange="cfg.maxSleep=Math.max(+this.value,cfg.minSleep);refresh()">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Lights out <span class="help-icon" data-tip="When he usually turns the lights out. The plan won't schedule bed earlier than this (unless Min sleep can't fit otherwise), so planned sleep = time from lights-out + falling asleep to the next morning's wake-up, capped at Max sleep. Use a 'Late night' day event for one-off later nights.">?</span></span>
+        <input type="time" value="${toTimeStr(cfg.lightsOut)}" onblur="cfg.lightsOut=fromTimeStr(this.value);refresh()" style="width:100px;padding:4px 8px">
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-lbl">Time to fall asleep (min) <span class="help-icon" data-tip="Minutes in bed before actually falling asleep. Counted as time in bed, not as sleep — matching how the Apple Watch reports sleep.">?</span></span>
+        <input type="number" value="${Math.round((cfg.sleepLatency || 0) * 60)}" min="0" max="60" step="5" onchange="cfg.sleepLatency=r2(+this.value/60);refresh()">
       </div>
       <div class="cfg-row">
         <span class="cfg-lbl">Dinner time</span>
@@ -1373,33 +1835,33 @@ function renderCfg() {
         <input type="number" value="${Math.round(cfg.mealMax*60)}" min="${Math.round(cfg.mealFloor*60)}" max="120" step="5" onchange="cfg.mealMax=Math.max(cfg.mealFloor,+this.value/60);refresh()">
       </div>
 
-      <!-- ── Academics ──────────────────────────────────────── -->
-      <div class="cfg-section full-col">
-        <div class="cfg-section-title">Academics</div>
+      ${accClose}${accOpen("academics", `Academics`)}
+      <div class="cfg-row">
+        <span class="cfg-lbl">Max study per subject / day (hrs) <span class="help-icon" data-tip="No subject gets more than this in one day; extra hours go to other days.">?</span></span>
+        <input type="number" value="${cfg.studySubjectDayMax}" min="0.5" max="8" step="0.25" onchange="cfg.studySubjectDayMax=+this.value;refresh()">
       </div>
       <div class="cfg-row">
-        <span class="cfg-lbl">Study break interval (hrs) <span class="help-icon" data-tip="Max study chunk before a break is inserted.">?</span></span>
-        <input type="number" value="${cfg.studyBreakInterval}" min="0.25" max="3" step="0.25" onchange="cfg.studyBreakInterval=+this.value;refresh()">
+        <span class="cfg-lbl">Break every (min) <span class="help-icon" data-tip="Study is split into chunks this long with a short break between them. The break time is budgeted, so it doesn't come out of sleep.">?</span></span>
+        <input type="number" value="${Math.round(cfg.studyBreakInterval * 60)}" min="15" max="120" step="5" onchange="cfg.studyBreakInterval=+this.value/60;refresh()">
       </div>
       <div class="cfg-row">
-        <span class="cfg-lbl">Study break duration (min)</span>
-        <input type="number" value="${r2(cfg.studyBreakDuration*60)}" min="2" max="20" step="1" onchange="cfg.studyBreakDuration=+this.value/60;refresh()">
+        <span class="cfg-lbl">Break length (min)</span>
+        <input type="number" value="${Math.round(cfg.studyBreakDuration * 60)}" min="0" max="20" step="1" onchange="cfg.studyBreakDuration=+this.value/60;refresh()">
       </div>
       <div class="cfg-row full-col">
         <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px">
           <span class="cfg-lbl" style="margin:0">Subjects</span>
           <button class="btn-add" onclick="addSubj()">+ Add subject</button>
         </div>
+        <div class="subj-tbl-wrap">
         <table class="subj-tbl">
           <tr><th style="width:110px">Subject</th><th>Test days</th><th style="width:65px" data-tip="Relative importance of this subject (0.1–5). Higher = LP prioritises it more in the objective. E.g. a weight of 2 gets twice the urgency score of a weight of 1.">Weight (0.1–5)</th><th style="width:75px" data-tip="Min total hours studied before nearest test.">Pre-test floor</th><th style="width:75px" data-tip="Max hrs/day after all tests passed.">Post-test max</th><th style="width:30px"></th></tr>
           ${sr}
         </table>
+        </div>
       </div>
 
-      <!-- ── Wellness Weights ───────────────────────────────── -->
-      <div class="cfg-section full-col">
-        <div class="cfg-section-title">Wellness weights <span class="help-icon" data-tip="How much the optimizer values each wellness activity relative to each other. Higher = LP pushes harder to maximise that activity when spare budget is available. Scaled together by the wellness/performance slider.">?</span></div>
-      </div>
+      ${accClose}${accOpen("wellness", `Wellness weights <span class="help-icon" data-tip="How much the optimizer values each wellness activity relative to each other. Higher = LP pushes harder to maximise that activity when spare budget is available. Scaled together by the wellness/performance slider.">?</span>`)}
       <div class="cfg-row">
         <span class="cfg-lbl">Practice <span class="help-icon" data-tip="Base weight for practice in the LP objective, scaled by the sport profile urgency curve and the performance multiplier.">?</span></span>
         <input type="number" value="${cfg.wellnessWeights.practice}" min="0" max="3" step="0.1" onchange="cfg.wellnessWeights.practice=+this.value;refresh()">
@@ -1417,39 +1879,56 @@ function renderCfg() {
         <input type="number" value="${cfg.wellnessWeights.free}" min="0" max="3" step="0.1" onchange="cfg.wellnessWeights.free=+this.value;refresh()">
       </div>
 
-      <!-- ── Free Time ──────────────────────────────────────── -->
-      <div class="cfg-section full-col">
-        <div class="cfg-section-title">Free Time</div>
-      </div>
+      ${accClose}${accOpen("freetime", `Free Time`)}
       <div class="cfg-row">
         <span class="cfg-lbl">Min free time / week <span class="help-icon" data-tip="Minimum total free hours across the week, split evenly across days.">?</span></span>
         <input type="number" value="${cfg.freeFloor}" min="0" max="40" step="1" onchange="cfg.freeFloor=+this.value;refresh()">
         <span class="hw-unit">hrs</span>
       </div>
-      <div class="cfg-row full-col" style="margin-top:4px">
-        <button class="btn-refresh" onclick="refresh()">Recalculate</button>
-      </div>
+      ${accClose}
+      <button class="btn-refresh" onclick="refresh()">Recalculate</button>
 
     </div>`;
 }
 
+// Short text for an event's parameter: "7h", "lights out 1:00 AM", or "" when it has none.
+function eventParamText(ev) {
+  const type = DAY_EVENT_TYPES[ev.type];
+  if (!type?.param) return '';
+  if (type.param === 'time') return ` · lights out ${fmtT(ev.param)}`;
+  return ev.param > 0 ? ` · ${fmtD(ev.param)}` : '';
+}
+function eventChips(row) {
+  const a = row.adj;
+  const chips = [];
+  if (a.event) chips.push(`<span class="ev-chip">${a.event.icon} ${a.event.label}${eventParamText(a.event)}</span>`);
+  a.reasons.forEach(r => {
+    const soft = r.hard ? '' : ' (soft)';
+    const what = r.practiceCap === 0 ? `no practice${soft}` : r.practiceCap < 1 ? `practice ≤${Math.round(r.practiceCap * 100)}%${soft}` : '';
+    const sleep = r.fullSleep ? 'full sleep' : '';
+    chips.push(`<span class="ev-chip${r.rec ? ' ev-rec' : ''}" data-tip="${r.text.replace(/"/g, '&quot;')}">${r.rec ? '♻ recovery' : '↪ ' + (r.short || r.text)}: ${[what, sleep].filter(Boolean).join(', ')}</span>`);
+  });
+  return chips.length ? `<div>${chips.join('')}</div>` : '';
+}
+
 function renderGrid() {
   document.getElementById("day-grid").innerHTML = sched.map((row, i) => {
-    const gc  = row.isGame ? "#ef4444" : row.isPrac ? "#8b5cf6" : "var(--text)";
+    const gc  = row.isGame ? "#b03a2e" : row.isPrac ? "#8e3b5c" : "var(--text)";
+    const wtLbl = row.Weights >= 0.05 ? ` + weights ${fmtD(row.Weights)}` : '';
     const pracTag = (() => {
-      if (!row.isPrac) return row.dt.replace(/_/g," ");
+      if (!row.isPrac) return row.dt.replace(/_/g," ") + wtLbl;
       const dtgLbl = cfg.gameDay ? `${Math.max(0,row.dtg)}d to game` : "practice";
-      const durLbl = `${fmtD(row.Practice)}`;
+      const durLbl = `${row.Practice >= 0.05 ? fmtD(row.Practice) : 'no swim'}${wtLbl}`;
       const pressLbl = row.pressureSqueeze > 0.05
-        ? `<span style="color:#f59e0b"> ↓tests</span>`
+        ? `<span style="color:#a8770f"> ↓tests</span>`
         : row.lpSqueeze > 0.15
-        ? `<span style="color:#6366f1"> ↓study</span>`
+        ? `<span style="color:#6d5f8e"> ↓study</span>`
         : "";
       return `${dtgLbl} · ${durLbl}${pressLbl}`;
     })();
     const tag = row.isGame ? "GAME DAY" : pracTag;
     return `<div class="day-row ${selDay===i?"sel":""}" onclick="selDayFn(${i})">
-      <div><div class="d-name" style="color:${gc}">${row.dayName}</div><div class="d-date">${row.dateLabel}</div><div class="d-tag">${tag}</div></div>
+      <div><div class="d-name" style="color:${gc}">${row.dayName}</div><div class="d-date">${row.dateLabel}</div><div class="d-tag">${tag}</div>${visibleConflicts(row).map(cf => `<div class="d-tag clk-late">⚠ ${cf.what.toLowerCase()} ${fmtD(cf.late)} late</div>`).join('')}${eventChips(row)}</div>
       <div class="t-track">${renderBlocks(row)}</div>
 
     </div>`;
@@ -1497,12 +1976,54 @@ function renderDetail() {
     </div>`
   ).join("");
 
+  // ── Day plan: event picker + what it (and the recovery check) changes ──
+  const ev = cfg.dayEvents[row.dateKey];
+  const evType = ev && DAY_EVENT_TYPES[ev.type];
+  const opts = [`<option value="">Normal day</option>`].concat(Object.entries(DAY_EVENT_TYPES).map(([k, t]) =>
+    `<option value="${k}"${ev?.type === k ? ' selected' : ''}>${t.icon} ${t.label}</option>`)).join('');
+  const paramInput = !evType?.param ? '' : evType.param === 'time'
+    ? `<label style="font-size:12px;color:var(--text2)">${evType.paramLabel} <input type="time" value="${toTimeStr(ev.param ?? evType.defaultParam)}" onblur="setDayEventParam('${row.dateKey}',this.value)"></label>`
+    : `<label style="font-size:12px;color:var(--text2)">${evType.paramLabel} <input type="number" min="0" max="16" step="0.5" value="${ev.param ?? evType.defaultParam}" onchange="setDayEventParam('${row.dateKey}',this.value)"></label>`;
+  const effects = [];
+  if (row.adj.skipSchool) effects.push('No classes or school commute');
+  if (row.adj.weekendWake) effects.push(`Weekend wake-up (${fmtT(row.wake)})`);
+  if (row.adj.block) effects.push(`${row.adj.block.label} right after the morning routine`);
+  const a = row.adj;
+  if (a.hardCap < 1) effects.push(a.hardCap === 0 ? 'No practice or weights (hard rule)' : `Practice hard-capped at ${Math.round(a.hardCap * 100)}%`);
+  if (a.softCap < 1 && a.softCap < a.hardCap) {
+    const capTxt = a.softCap === 0 ? 'No practice' : `Practice ≤${Math.round(a.softCap * 100)}% of the usual ceiling`;
+    effects.push(`${capTxt} — soft (each extra hour costs ${a.softPen} in the plan's score)` +
+      (row._overCap >= 0.05 ? ` · <b>plan goes ${fmtD(row._overCap)} over</b> because the week needs it at this slider setting` : ' · plan stays within it'));
+  }
+  if (a.hardFullSleep) effects.push('Full sleep window protected (hard rule)');
+  else if (a.softFullPen > 0) effects.push(`Full sleep window preferred — soft (each hour short costs ${a.softFullPen})` +
+      (row._sleepShort >= 0.05 ? ` · <b>plan is ${fmtD(row._sleepShort)} short</b>` : ' · plan gives the full window'));
+  if (row.studyMoved >= 0.05) effects.push(`Moved ${fmtD(row.studyMoved)} of study to other days — today has no open time left for it`);
+  if (row.studyUnplaced >= 0.05) effects.push(`<b>${fmtD(row.studyUnplaced)} of planned study doesn't fit anywhere today</b> and isn't on the timeline — free up time today or lower that subject's weight / pre-test floor`);
+  if (row.eveningTrim >= 0.05) effects.push(`Moved ${fmtD(row.eveningTrim)} of homework/study to other days so the evening after ${row.dt.startsWith('game') ? 'the game' : 'practice'} fits before lights-out`);
+  if (row.overrun >= 0.05) effects.push(`<b>Evening still runs ${fmtD(row.overrun)} past the planned wind-down</b> — homework is already at its daily minimum; consider an earlier practice or a lighter day`);
+  effects.push(`Training today: swim ${fmtD(row.Practice || 0)}${row.weightsHi > 0 ? `, weights ${fmtD(row.Weights || 0)} (up to ${fmtD(row.weightsHi)})` : ''} · homework ${fmtD(row.Homework || 0)} (this day allows ${fmtD(row.hwRange[0])}–${fmtD(row.hwRange[1])})`);
+  row.adj.reasons.forEach(r => effects.push(`${r.rec ? '♻ Recovery check' : '↪ Because of'}: ${r.text}`));
+  const latencyM = Math.round((cfg.sleepLatency || 0) * 60);
+  const nextWakeAt = fmtT(row.tl[0].start + row.tl[0].dur);
+  const lightsTxt = `Lights out ${fmtT(row.lightsOut)}${latencyM ? ` + ${latencyM}m to fall asleep` : ''}`;
+  const sleepLine = cfg.minSleep > row.sleepWindow + 0.01
+    ? `${lightsTxt} leaves only ${fmtD(row.sleepWindow)} before the ${nextWakeAt} wake-up — Min sleep (${cfg.minSleep}h) needs an earlier bedtime.`
+    : `${lightsTxt} → up to ${fmtD(row.sleepWindow)} of sleep before the ${nextWakeAt} wake-up.`;
+
   el.innerHTML = `
     <div class="det">
       <div class="det-hdr">
         <span class="det-title">${row.dayName}, ${row.dateLabel} — ${row.dt.replace(/_/g," ")}</span>
         <span class="det-sub">wake ${fmtT(row.wake)} · sleep ${fmtD(row.tl[0]?.dur ?? row.Sleep)} · ${dtgStr}</span>
       </div>
+      ${conflictCallouts(row, selDay)}
+      <div class="sec-hd">Day plan</div>
+      <div class="ev-editor">
+        <select onchange="setDayEvent('${row.dateKey}',this.value)">${opts}</select>
+        ${paramInput}
+      </div>
+      <div class="ev-effects">${effects.length ? effects.map(e => `• ${e}`).join('<br>') : 'No special adjustments — the optimizer plans this day normally.'}<br>• ${sleepLine}</div>
       <div class="sec-hd">Time blocks</div>
       <div class="chips">${chips}</div>
       <div class="sec-hd">Hourly breakdown</div>
@@ -1519,16 +2040,111 @@ function renderDetail() {
 // ═══════════════════════════════════════════════════════════════════════
 // EVENT HANDLERS
 // ═══════════════════════════════════════════════════════════════════════
+// Recovery check card (Schedule tab). The check itself lives with the Stress tab code
+// (recoveryPlan / recoveryAdjustFor); this only shows its verdict and what it changed this week.
+const REC_LOOK = {
+  red:   { color: '#b03a2e', title: 'Back off' },
+  amber: { color: '#a8770f', title: 'Take it easier' },
+  green: { color: '#4f7a2a', title: 'Recovery looks normal' },
+  stale: { color: '#957a60', title: 'Health data is out of date' },
+  none:  { color: '#957a60', title: 'No health data yet' },
+};
+function renderRecovery() {
+  const el = document.getElementById('recovery-card');
+  if (!el) return;
+  const plan = typeof recoveryPlan === 'function' ? recoveryPlan() : { status: 'none', reasons: [] };
+  const look = REC_LOOK[plan.status] || REC_LOOK.none;
+  const applied = sched.filter(r => r.adj.reasons.some(x => x.rec))
+    .map(r => { const x = r.adj.reasons.find(y => y.rec);
+      return `${r.dayName} (${x.practiceCap === 0 ? 'no practice' : `practice ≤${Math.round(x.practiceCap * 100)}%`}${x.fullSleep ? ', full sleep' : ''})`; });
+  const lines = [];
+  if (plan.status === 'none') lines.push('Import the Shortcut export on the Stress tab — it is remembered in this browser, so each week only needs the new file.');
+  if (plan.status === 'stale') lines.push(`Latest complete night is ${plan.lastNight}; import this week's export to use the check for the week of ${weekStartDate}.`);
+  plan.reasons.forEach(r => lines.push(r));
+  if (plan.status === 'red' || plan.status === 'amber')
+    lines.push(cfg.recoveryCheck ? (applied.length ? `Applied this week: ${applied.join(', ')}.` : 'Nothing to apply in this week (the affected days fall outside it).')
+                                 : 'Not applied — the check is switched off.');
+  if (plan.lastNight && plan.status !== 'stale') lines.push(`<span style="color:var(--text3)">Data through the night of ${plan.lastNight} · normal levels from ${plan.basis}.</span>`);
+  el.innerHTML = `<div class="rec-card" style="--rec-c:${look.color}">
+    <div class="rec-dot"></div>
+    <div class="rec-body"><div class="rec-title">Recovery check: ${look.title}</div>${lines.join('<br>')}</div>
+    <label class="rec-toggle"><input type="checkbox" ${cfg.recoveryCheck ? 'checked' : ''} onchange="cfg.recoveryCheck=this.checked;refresh()"> use in plan</label>
+  </div>`;
+}
+
+// ── Clock conflicts: week banner (catches wrong settings) + day-panel callout (details and fixes) ──
+const dismissedConflicts = new Set();   // `${dateKey}|${what}` hidden for this session via "Keep as is"
+const conflictKey = (r, cf) => `${r.dateKey}|${cf.what}`;
+const visibleConflicts = r => (r.conflicts || []).filter(cf => !dismissedConflicts.has(conflictKey(r, cf)));
+const roundTo5 = h => Math.round(h * 12) / 12;
+function renderConflicts() {
+  const el = document.getElementById('conflict-banner');
+  if (!el) return;
+  const items = sched.flatMap((r, i) => visibleConflicts(r).map(cf => ({ r, i, cf })));
+  const unfit = sched.map((r, i) => ({ r, i })).filter(({ r }) => r.studyUnplaced >= 0.05);
+  const n = items.length + unfit.length;
+  el.innerHTML = !n ? '' : `<div class="clk-banner">
+    <div class="clk-title">⏰ ${n} thing${n > 1 ? 's' : ''} this week can't happen as planned</div>
+    ${items.map(({ r, i, cf }) => `<div class="clk-item">• <b>${r.dayName}</b>: ${cf.what.toLowerCase()} set for ${fmtT(cf.setAt)}, planned ${fmtT(cf.actual)} — ${cf.cause}. <a onclick="selDay=null;selDayFn(${i})">Open day</a></div>`).join('')}
+    ${unfit.map(({ r, i }) => `<div class="clk-item">• <b>${r.dayName}</b>: ${fmtD(r.studyUnplaced)} of planned study doesn't fit anywhere in the day. <a onclick="selDay=null;selDayFn(${i})">Open day</a></div>`).join('')}
+    <div class="clk-item" style="color:#957a60">Fix it in the day panel, or change the time in Practice / Game &amp; Sport or the wake-up time in Schedule.</div></div>`;
+}
+function conflictCallouts(row, i) {
+  return visibleConflicts(row).map(cf => {
+    const fixes = [`<button class="btn-save" onclick="setClockTime('${cf.what}','${row.dt}',${roundTo5(cf.actual)})">Use ${fmtT(roundTo5(cf.actual))} as the ${cf.what.toLowerCase()} time</button>`];
+    if (cf.causeKind === 'wake') fixes.push(`<button class="btn-save" onclick="setWakeFor('${row.dt}',${roundTo5(cf.wakeNeeded)})">Wake up at ${fmtT(roundTo5(cf.wakeNeeded))} instead</button>`);
+    fixes.push(`<button class="btn-save" onclick="dismissedConflicts.add('${conflictKey(row, cf)}');refresh()">Keep as is</button>`);
+    return `<div class="clk-callout"><div style="font-size:18px">⏰</div><div style="flex:1">
+      <b>${cf.what} is set for ${fmtT(cf.setAt)}, but ${cf.cause}.</b> It's planned at ${fmtT(cf.actual)} instead (${fmtD(cf.late)} later), and everything after it shifts too.
+      <div class="clk-actions">${fixes.join('')}</div></div></div>`;
+  }).join('');
+}
+// Fix buttons change the setting for every day of that type (e.g. all weekend practice days).
+function setClockTime(what, dt, t) {
+  if (what === 'Practice') cfg.practiceStart[dt] = t; else cfg.gameStart[dt] = t;
+  refresh();
+}
+function setWakeFor(dt, t) {
+  if (['school', 'friday', 'practice_weekday', 'game_weekday'].includes(dt)) return setWeekdayWake(t);
+  cfg.wake[dt] = t; refresh();
+}
+
+// Fields added after v1 schedule files were first saved; older files get these defaults on load.
+const CFG_ADDED_DEFAULTS = { lightsOut: 23.0, sleepLatency: 0.33, dayEvents: {}, recoveryCheck: true,
+  swimWeekMax: 12, weightsWeekMax: 2, weightsDays: [2, 4], weightsSessionMax: 1.0, trainingMinFrac: 0.4,
+  practiceDayMin: 1.0, homeworkSchoolDayMin: 1.5,
+  studySubjectDayMax: 2, studyBreakInterval: 0.75, studyBreakDuration: 5 / 60,
+  homeworkMinFrac: 0.6, homeworkMaxFrac: 1.2 };
+function withCfgDefaults(c) {
+  const out = { ...JSON.parse(JSON.stringify(CFG_ADDED_DEFAULTS)), ...c };
+  if (!out.dayEvents || typeof out.dayEvents !== 'object') out.dayEvents = {};
+  return out;
+}
+
+function toggleWeightsDay(n, on) {
+  const d = cfg.weightsDays || [];
+  cfg.weightsDays = on ? [...d.filter(x => x !== n), n].sort((a, b) => a - b) : d.filter(x => x !== n);
+  refresh();
+}
+function setDayEvent(key, type) {
+  if (!type) delete cfg.dayEvents[key];
+  else cfg.dayEvents[key] = { type, param: DAY_EVENT_TYPES[type].defaultParam };
+  refresh();
+}
+function setDayEventParam(key, raw) {
+  const ev = cfg.dayEvents[key];
+  if (!ev || raw === '') return;
+  ev.param = DAY_EVENT_TYPES[ev.type].param === 'time' ? fromTimeStr(raw) : Math.max(0, +raw);
+  refresh();
+}
 function selDayFn(i) {
   selDay = selDay === i ? null : i;
   renderGrid();
   renderDetail();
 }
-function toggleCfg() {
-  cfgOpen = !cfgOpen;
-  document.getElementById("cfg-body").style.display = cfgOpen ? "block" : "none";
-  document.getElementById("cfg-arr").textContent    = cfgOpen ? "▴" : "▾";
-  if (cfgOpen) renderCfg();
+function toggleCfgSection(key) {
+  if (cfgOpenSections.has(key)) cfgOpenSections.delete(key); else cfgOpenSections.add(key);
+  renderCfg();
 }
 function setWeekdayWake(val) {
   ["school","friday","practice_weekday","game_weekday"].forEach(k => cfg.wake[k] = val);
@@ -1566,6 +2182,18 @@ function updSubj(i, key, val) {
   cfg.subjects[i][key] = val;
   refresh();
 }
+// UI scale 1–10 <-> internal 0–1
+function toScale(t)   { return Math.round((1 + 9 * clamp(t, 0, 1)) * 10) / 10; }
+function fromScale(v) { return clamp((+v - 1) / 9, 0, 1); }
+// Recompute and redraw everything except the config panel, so a slider being dragged isn't destroyed.
+function refreshLive() {
+  compute();
+  renderConflicts();
+  renderSummary();
+  renderRecovery();
+  renderGrid();
+  if (selDay !== null) renderDetail();
+}
 function setPerfAlpha(val) {
   perfAlpha = val;
   const readout = document.getElementById("tradeoff-readout");
@@ -1576,11 +2204,11 @@ function setPerfAlpha(val) {
                 : val < 0.8  ? "performance focus"
                 :              "max performance";
     readout.textContent = label;
-    readout.style.color = val < 0.4 ? "#0ea5e9" : val > 0.6 ? "#8b5cf6" : "var(--text2)";
+    readout.style.color = val < 0.4 ? "#3f7f99" : val > 0.6 ? "#8e3b5c" : "var(--text2)";
   }
   const inp2 = document.getElementById("perf-alpha-input");
-  if (inp2) inp2.value = val;
-  refresh();
+  if (inp2) inp2.value = toScale(val);
+  refreshLive();
 }
 // urgency slider: 0–1 normalized → actual range [0.5, 6]
 const URGENCY_MIN = 0.5, URGENCY_MAX = 6;
@@ -1598,11 +2226,11 @@ function setUrgencyScale(t) {
                 : t < 0.8  ? "heavy"
                 :             "max cramming";
     readout.textContent = label;
-    readout.style.color = t < 0.4 ? "#22c55e" : t > 0.6 ? "#ef4444" : "var(--text2)";
+    readout.style.color = t < 0.4 ? "#5f7d1f" : t > 0.6 ? "#b03a2e" : "var(--text2)";
   }
-  const inp = document.getElementById("urgency-scale-input");
-  if (inp) inp.value = val;
-  refresh();
+  const inp = document.getElementById("urgency-scale-input-2");
+  if (inp) inp.value = toScale(t);
+  refreshLive();
 }
 // AP slider: 0–1 normalized → actual range [0.5, 5]
 const AP_MIN = 0.5, AP_MAX = 5;
@@ -1620,17 +2248,14 @@ function setAcadPressure(t) {
                 : t < 0.8  ? "practice focus"
                 :             "practice protected";
     readout.textContent = label;
-    readout.style.color = t < 0.4 ? "#f59e0b" : t > 0.6 ? "#8b5cf6" : "var(--text2)";
+    readout.style.color = t < 0.4 ? "#a8770f" : t > 0.6 ? "#8e3b5c" : "var(--text2)";
   }
-  const inp = document.getElementById("ap-threshold-input");
-  if (inp) inp.value = val;
-  refresh();
+  const inp = document.getElementById("ap-threshold-input-2");
+  if (inp) inp.value = toScale(t);
+  refreshLive();
 }
 async function saveSchedule() {
-  const days = sched.map(row => {
-    const { _studyPlaced, ...day } = row;
-    return { ...day, date: formatScheduleDate(row.n) };
-  });
+  const days = sched.map(row => ({ ...row, date: formatScheduleDate(row.n) }));
   const snapshot = {
     format: 'athlete-schedule',
     version: 1,
@@ -1638,6 +2263,8 @@ async function saveSchedule() {
     weekStart: weekStartDate,
     performanceBalance: perfAlpha,
     config: JSON.parse(JSON.stringify(cfg)),
+    // What the recovery check said when this plan was made (for later schedule-vs-health analysis)
+    recovery: typeof recoveryPlan === 'function' ? (({ status, reasons, lastNight }) => ({ status, reasons, lastNight }))(recoveryPlan()) : null,
     days
   };
   const filename = `athlete_schedule_${weekStartDate}.json`;
@@ -1673,7 +2300,7 @@ async function loadScheduleFile(file) {
     if (Number.isNaN(weekDate.getTime())) throw new Error('The schedule file has an invalid week date.');
     if (!Array.isArray(snapshot.config.subjects)) throw new Error('The schedule file has invalid settings.');
 
-    cfg = snapshot.config;
+    cfg = withCfgDefaults(snapshot.config);
     perfAlpha = Number(snapshot.performanceBalance);
     if (!Number.isFinite(perfAlpha)) perfAlpha = 0.5;
     perfAlpha = clamp(perfAlpha, 0, 1);
@@ -1689,9 +2316,11 @@ async function loadScheduleFile(file) {
 }
 function refresh() {
   compute();
+  renderConflicts();
   renderSummary();
+  renderRecovery();
   renderGrid();
-  if (cfgOpen) renderCfg();
+  renderCfg();
   if (selDay !== null) renderDetail();
 }
 
@@ -1709,7 +2338,6 @@ document.addEventListener("mouseover", e => {
 document.addEventListener("mouseout", e => {
   if (e.target.closest("[data-tip]")) document.getElementById("tip").style.display = "none";
 });
-document.getElementById("cfg-hdr").addEventListener("click", toggleCfg);
 
 // ═══════════════════════════════════════════════════════════════════════
 // INIT
@@ -1719,19 +2347,22 @@ document.getElementById("cfg-hdr").addEventListener("click", toggleCfg);
 cfg.subjects.forEach(s => { s.testDays = (s.testDays||[]).filter(d => d <= 5); });
 
 compute();
+renderConflicts();
 renderSummary();
+renderRecovery();
 renderGrid();
 renderAxis();
 renderLegend();
+renderCfg();
 const weekStartInput = document.getElementById('schedule-week-start');
 if (weekStartInput) weekStartInput.value = weekStartDate;
 // Initialise slider readouts from current cfg values
 setAcadPressure(apToSlider(cfg.academicPressureThreshold));
 const apSlider = document.getElementById("ap-slider");
-if (apSlider) apSlider.value = apToSlider(cfg.academicPressureThreshold);
+if (apSlider) apSlider.value = toScale(apToSlider(cfg.academicPressureThreshold));
 setUrgencyScale(urgencyToSlider(cfg.urgencyScale));
 const urgSlider = document.getElementById("urgency-slider");
-if (urgSlider) urgSlider.value = urgencyToSlider(cfg.urgencyScale);
+if (urgSlider) urgSlider.value = toScale(urgencyToSlider(cfg.urgencyScale));
 </script>
 
 <script>
@@ -2222,12 +2853,147 @@ function scoreDaily(days) {
 
 function sAddLi(el, html) { const li = document.createElement('li'); li.innerHTML = html; el.appendChild(li); }
 
+// ---------- remembered health data ----------
+// Parsed rows are kept in localStorage (compact) so each week only needs the new export, and so a
+// night split across two weekly files (export ends ~11:57 PM Sunday) is joined back together.
+const HEALTH_KEY = 'scheduleOptimizer.healthRows';
+const HEALTH_FILES_KEY = 'scheduleOptimizer.healthFiles';
+const STAGE_CODE = { deep: 'sd', asleep: 'sa', awake: 'sw' }, CODE_STAGE = { sd: 'deep', sa: 'asleep', sw: 'awake' };
+const TYPE_CODE = { hrv: 'h', rhr: 'r', resp: 'p' }, CODE_TYPE = { h: 'hrv', r: 'rhr', p: 'resp' };
+let sRows = [];          // all remembered rows, sorted by start
+let sRowsVersion = 0;    // bumps whenever sRows changes (cache key for the recovery check)
+
+function packRow(r) { return r.type === 'sleep' ? [STAGE_CODE[r.stage], r.start.getTime() / 60000] : [TYPE_CODE[r.type], r.start.getTime() / 60000, r.value]; }
+function unpackRow(p) { const start = new Date(p[1] * 60000);
+  return CODE_STAGE[p[0]] ? { type: 'sleep', stage: CODE_STAGE[p[0]], start } : { type: CODE_TYPE[p[0]], start, value: p[2] }; }
+function mergeHealthRows(newRows) {
+  const seen = new Set(sRows.map(r => packRow(r).join('|')));
+  newRows.forEach(r => { const k = packRow(r).join('|'); if (!seen.has(k)) { seen.add(k); sRows.push(r); } });
+  sRows.sort((a, b) => a.start - b.start);
+  sRowsVersion++;
+  try { localStorage.setItem(HEALTH_KEY, JSON.stringify(sRows.map(packRow))); } catch (e) { console.warn('Could not remember health data:', e); }
+}
+function loadStoredHealth() {
+  try {
+    const packed = JSON.parse(localStorage.getItem(HEALTH_KEY) || '[]');
+    sRows = packed.map(unpackRow).sort((a, b) => a.start - b.start);
+    sImportedFiles = JSON.parse(localStorage.getItem(HEALTH_FILES_KEY) || '[]');
+  } catch (e) { sRows = []; sImportedFiles = []; }
+  sRowsVersion++;
+  sDaily = sRows.length ? buildDaily(sRows) : [];
+}
+function clearStoredHealth() {
+  sRows = []; sDaily = []; sImportedFiles = []; sRowsVersion++;
+  try { localStorage.removeItem(HEALTH_KEY); localStorage.removeItem(HEALTH_FILES_KEY); } catch (e) {}
+}
+
+// ---------- recovery check (feeds the scheduler) ----------
+// One record per night D, aligned like the schedule: sleep that starts the evening of D, plus
+// HRV / resting HR / breathing rate measured 6 PM D → noon D+1. A night is "complete" only once
+// data exists past noon D+1 (a weekly export ending Sunday 11:57 PM leaves Sunday night incomplete).
+// Breathing rate / resting HR must clear BOTH a z-score and an absolute rise: his breathing rate is
+// very steady (±0.3/min), so a z-score alone would flag trivial changes.
+const REC = { RESP_Z: 2, RESP_RISE: 1.0, RHR_Z: 2, RHR_RISE: 5, HRV_Z: -1.5, STRESS: 0.5, SHORT_SLEEP: 6.5, STALE_DAYS: 3 };
+function addDays(d, k) { const x = new Date(d); x.setDate(x.getDate() + k); return x; }   // DST-safe
+// What each verdict does to the coming days (index 0 = first day after the data, or the week's Monday)
+// Soft: going past these costs SOFT_PENALTY.red / .amber per hour in the scheduler's objective.
+const REC_EFFECT = {
+  red:   [{ practiceCap: 0.4, fullSleep: true }, { practiceCap: 0.4, fullSleep: true }, { practiceCap: 0.7, fullSleep: true }]
+           .map(e => ({ ...e, penalty: SOFT_PENALTY.red })),
+  amber: [{ practiceCap: 0.75, fullSleep: true }, { practiceCap: 0.75, fullSleep: true }]
+           .map(e => ({ ...e, penalty: SOFT_PENALTY.amber })),
+};
+const DAY_MS = 86400000;
+let sNightsCache = { version: -1, nights: null };
+function overnightRecords() {
+  if (sNightsCache.version === sRowsVersion) return sNightsCache.nights;
+  const nights = new Map();
+  const get = key => { if (!nights.has(key)) nights.set(key, { date: key, hrv: [], rhr: [], resp: [], asleep: 0, deep: 0, awake: 0 }); return nights.get(key); };
+  const maxTs = sRows.length ? sRows[sRows.length - 1].start.getTime() : 0;
+  sRows.forEach(r => {
+    if (r.type === 'sleep') return;
+    const shifted = new Date(r.start.getTime() - 18 * 3600000);
+    if (shifted.getHours() < 18) get(sDateKey(shifted))[r.type].push(r.value);
+  });
+  const sl = sRows.filter(r => r.type === 'sleep');
+  sl.forEach((r, i) => {
+    const next = sl[i + 1]; if (!next) return;
+    const gap = next.start - r.start; if (gap <= 0 || gap > MAX_STAGE_GAP_MS) return;
+    const n = get(sDateKey(new Date(r.start.getTime() - 12 * 3600000))), h = gap / 3600000;
+    if (r.stage === 'deep') { n.deep += h; n.asleep += h; } else if (r.stage === 'asleep') n.asleep += h; else if (r.stage === 'awake') n.awake += h;
+  });
+  const out = [...nights.values()].map(n => {
+    const sleep = n.asleep > 0 ? n.asleep : null;
+    const noonAfter = parseLocalDate(n.date).getTime() + DAY_MS + 12 * 3600000;
+    return { date: n.date, hrv: sAvg(n.hrv), rhr: sAvg(n.rhr), resp: sAvg(n.resp), sleep,
+             deepPct: sleep ? n.deep / sleep * 100 : null, awake: sleep ? n.awake : null, complete: maxTs >= noonAfter };
+  }).filter(n => n.complete && STRESS_METRICS.some(m => n[m] != null)).sort((a, b) => a.date.localeCompare(b.date));
+  sNightsCache = { version: sRowsVersion, nights: out };
+  return out;
+}
+
+let sRecCache = { key: null, plan: null };
+function recoveryPlan() {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const weekStart = parseLocalDate(weekStartDate);
+  const live = today >= weekStart && today < addDays(weekStart, 7);
+  // Planning ahead (e.g. Sunday evening) can only see through Saturday night; mid-week, through last night.
+  const through = addDays(live ? today : addDays(weekStart, -1), -1);
+  const cacheKey = `${sRowsVersion}|${weekStartDate}|${sDateKey(through)}|${sBaseline ? sBaseline.range : ''}`;
+  if (sRecCache.key === cacheKey) return sRecCache.plan;
+
+  const all = overnightRecords();
+  const avail = all.filter(n => n.date <= sDateKey(through));
+  let plan;
+  if (!all.length) plan = { status: 'none', reasons: [], perDate: {} };
+  else if (!avail.length || parseLocalDate(avail[avail.length - 1].date) < addDays(through, -(REC.STALE_DAYS - 1)))
+    plan = { status: 'stale', reasons: [], perDate: {}, lastNight: avail.length ? sShort(avail[avail.length - 1].date) : sShort(all[0].date) };
+  else {
+    const recentCut = sDateKey(addDays(through, -2));
+    const recent = avail.filter(n => n.date >= recentCut);              // last 3 calendar nights
+    const history = avail.filter(n => n.date < sDateKey(addDays(through, -6)));
+    const stats = sBaseline ? sBaseline.stats : computeStats(history.length >= 14 ? history : avail);
+    const basis = sBaseline ? `the saved baseline (${sBaseline.range})` : history.length >= 14 ? `${history.length} earlier nights` : `all ${avail.length} imported nights (set a baseline on the Stress tab for a steadier reference)`;
+    const z = (n, m) => (n[m] == null || !stats[m] || !stats[m].std) ? null : (n[m] - stats[m].mean) / stats[m].std;
+    const red = [], amber = [];
+    recent.forEach(n => { const zr = z(n, 'resp');
+      if (zr != null && zr >= REC.RESP_Z && n.resp - stats.resp.mean >= REC.RESP_RISE) red.push(`Breathing rate during sleep was ${sFmt(n.resp, 1)} on the night of ${sShort(n.date)} (normal ${sFmt(stats.resp.mean, 1)} ± ${sFmt(stats.resp.std, 1)}) — often an early sign of getting sick.`); });
+    const last2 = recent.slice(-2);
+    if (last2.length === 2 && last2.every(n => (z(n, 'rhr') ?? -9) >= REC.RHR_Z && n.rhr - stats.rhr.mean >= REC.RHR_RISE))
+      red.push(`Resting heart rate high two nights running (${last2.map(n => sFmt(n.rhr, 0)).join(', ')} vs normal ${sFmt(stats.rhr.mean, 0)}).`);
+    const stressVals = compositeStressIndex(recent, stats);
+    const highStress = stressVals.filter(s => s != null && s >= REC.STRESS).length;
+    if (highStress >= 2) amber.push(`Stress index above +${REC.STRESS} on ${highStress} of the last ${recent.length} nights.`);
+    const sleeps = recent.map(n => n.sleep).filter(v => v != null);
+    if (sleeps.length >= 2 && sAvg(sleeps) < REC.SHORT_SLEEP) amber.push(`Averaging ${sFmt(sAvg(sleeps), 1)}h of sleep over the last ${sleeps.length} nights.`);
+    const latest = recent[recent.length - 1];
+    if (latest && (z(latest, 'hrv') ?? 9) <= REC.HRV_Z) amber.push(`HRV low on the night of ${sShort(latest.date)} (${sFmt(latest.hrv, 0)} ms vs normal ${sFmt(stats.hrv.mean, 0)}).`);
+
+    const status = red.length ? 'red' : amber.length ? 'amber' : 'green';
+    const reasons = red.length ? red.concat(amber) : amber;
+    const perDate = {};
+    const lastNightDate = parseLocalDate(avail[avail.length - 1].date);
+    const start = addDays(lastNightDate, 1) > weekStart ? addDays(lastNightDate, 1) : weekStart;
+    (REC_EFFECT[status] || []).forEach((eff, k) => {
+      perDate[sDateKey(addDays(start, k))] ={ ...eff, why: `${status === 'red' ? 'back off' : 'take it easier'} — ${reasons[0]}` };
+    });
+    plan = { status, reasons, perDate, lastNight: sShort(avail[avail.length - 1].date), basis };
+  }
+  sRecCache = { key: cacheKey, plan };
+  return plan;
+}
+function recoveryAdjustFor(dateKey) {
+  const plan = recoveryPlan();
+  return (plan.status === 'red' || plan.status === 'amber') ? plan.perDate[dateKey] || null : null;
+}
+
 function renderStress() {
   const hasData = sDaily.length > 0;
   document.getElementById('s-empty').style.display = hasData ? 'none' : '';
   document.getElementById('s-content').style.display = hasData ? '' : 'none';
   document.getElementById('s-baseline-row').style.display = hasData ? '' : 'none';
   document.getElementById('s-baseline-clear-btn').style.display = sBaseline ? '' : 'none';
+  document.getElementById('s-clear-health-btn').style.display = hasData ? '' : 'none';
   if (!hasData) return;
 
   const scored = scoreDaily(sDaily);
@@ -2294,13 +3060,16 @@ document.getElementById('s-import-input').addEventListener('change', async (e) =
 
   const texts = await Promise.all(files.map(f => f.text()));
   const { rows, unmapped, ignored } = parseShortcutsExports(texts);
-  sDaily = buildDaily(rows);
-  sImportedFiles = files.map(f => f.name);
+  const before = sRows.length;
+  mergeHealthRows(rows);
+  sDaily = buildDaily(sRows);
+  sImportedFiles = [...new Set([...sImportedFiles, ...files.map(f => f.name)])];
+  try { localStorage.setItem(HEALTH_FILES_KEY, JSON.stringify(sImportedFiles)); } catch (e) {}
 
   const fmtCounts = map => [...map.entries()].map(([k,n]) => `${k} (${n})`).join(', ');
   const notUsed = fmtCounts(ignored);
   const unrecognized = fmtCounts(unmapped);
-  const parts = [`${files.length} file${files.length===1?'':'s'} · ${sDaily.length} day${sDaily.length===1?'':'s'} of data`];
+  const parts = [`${files.length} file${files.length===1?'':'s'} · ${sRows.length - before} new readings · ${sDaily.length} day${sDaily.length===1?'':'s'} of data remembered`];
   if (notUsed) parts.push(`not used by the score: ${notUsed}`);
   if (unrecognized) parts.push(`unrecognized: ${unrecognized}`);
   document.getElementById('s-import-status').textContent = parts.join(' — ');
@@ -2319,6 +3088,7 @@ document.getElementById('s-import-input').addEventListener('change', async (e) =
   }
 
   renderStress();
+  refresh();   // the recovery check may change this week's plan
 });
 document.getElementById('s-baseline-btn').addEventListener('click', () => {
   const start = document.getElementById('s-baseline-start').value;
@@ -2331,9 +3101,18 @@ document.getElementById('s-baseline-btn').addEventListener('click', () => {
   setBaseline(range);
   renderStress();
 });
-document.getElementById('s-baseline-clear-btn').addEventListener('click', () => { clearBaseline(); renderStress(); });
+document.getElementById('s-baseline-clear-btn').addEventListener('click', () => { clearBaseline(); renderStress(); refresh(); });
+document.getElementById('s-clear-health-btn').addEventListener('click', () => {
+  if (!confirm('Forget all health data stored in this browser? You can re-import the export files later.')) return;
+  clearStoredHealth();
+  document.getElementById('s-import-status').textContent = 'Stored health data cleared.';
+  renderStress();
+  refresh();
+});
 
-renderStress(); // initial empty state (or restores "vs. saved baseline" framing if one persisted)
+loadStoredHealth();
+renderStress(); // restores remembered data (or the empty state)
+if (sRows.length) refresh(); // the schedule was first computed before this script loaded the recovery check
 
 // ---------- tab switching ----------
 function showTab(name) {

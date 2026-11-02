@@ -1,0 +1,1050 @@
+{
+  "format": "athlete-schedule",
+  "version": 1,
+  "createdAt": "2026-11-01T19:08:39.049Z",
+  "weekStart": "2026-09-21",
+  "performanceBalance": 0.5,
+  "config": {
+    "lightsOut": 23,
+    "sleepLatency": 0.33,
+    "dayEvents": {},
+    "recoveryCheck": true,
+    "commute": {
+      "toSchool": 0.5,
+      "fromSchool": 0.5,
+      "toPractice": 0.33,
+      "fromPractice": 0.33,
+      "toGame": 0.75,
+      "fromGame": 0.75
+    },
+    "sportProfile": "maintain",
+    "gameDay": 6,
+    "gameDuration": 2,
+    "classHours": 7,
+    "practiceDays": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "urgencyScale": 1.99,
+    "baseStudyWeight": 0.1,
+    "homework": {
+      "school": 2.5,
+      "friday": 2.5,
+      "practice_weekday": 2.5,
+      "practice_weekend": 0.5,
+      "game_weekday": 1.5,
+      "game_weekend": 0.5,
+      "rest": 1.5
+    },
+    "wake": {
+      "school": 6.833,
+      "friday": 6.833,
+      "practice_weekday": 6.833,
+      "practice_weekend": 8.5,
+      "game_weekday": 6.833,
+      "game_weekend": 8.5,
+      "rest": 10
+    },
+    "practiceStart": {
+      "practice_weekday": 16.5,
+      "practice_weekend": 9
+    },
+    "gameStart": {
+      "game_weekday": 17,
+      "game_weekend": 13
+    },
+    "practiceMax": 3,
+    "practiceMin": 0,
+    "freeFloor": 8,
+    "academicPressureThreshold": 1.49,
+    "wellnessWeights": {
+      "sleep": 0.9,
+      "meals": 0.8,
+      "free": 0.4,
+      "practice": 1
+    },
+    "minSleep": 7,
+    "maxSleep": 10,
+    "dinnerTime": 18.5,
+    "mealBases": {
+      "dinner": {
+        "school": 0.75,
+        "friday": 0.75,
+        "practice_weekday": 0.5,
+        "practice_weekend": 0.75,
+        "game_weekday": 0.5,
+        "game_weekend": 0.75,
+        "rest": 1
+      },
+      "lunch": {
+        "practice_weekend": 0.5,
+        "rest": 0.75
+      }
+    },
+    "mealFloor": 0.5,
+    "mealMax": 1,
+    "subjects": [
+      {
+        "name": "Math",
+        "testDays": [
+          1
+        ],
+        "weight": 1.9,
+        "preTestFloor": 0,
+        "postTestMax": 0.1
+      },
+      {
+        "name": "History",
+        "testDays": [
+          2,
+          3
+        ],
+        "weight": 1.6,
+        "preTestFloor": 0,
+        "postTestMax": 0.1
+      },
+      {
+        "name": "English",
+        "testDays": [
+          3
+        ],
+        "weight": 1.4,
+        "preTestFloor": 0,
+        "postTestMax": 0.1
+      },
+      {
+        "name": "Science",
+        "testDays": [
+          5
+        ],
+        "weight": 1,
+        "preTestFloor": 0,
+        "postTestMax": 0.1
+      }
+    ]
+  },
+  "recovery": {
+    "status": "stale",
+    "reasons": [],
+    "lastNight": "Sep 20"
+  },
+  "days": [
+    {
+      "Practice": 2.25,
+      "Sleep": 7,
+      "Dinner": 0.5,
+      "Free": 0.5,
+      "Study:Math": 0,
+      "Study:History": 1.51,
+      "Study:English": 0,
+      "Study:Science": 0,
+      "Meals": 0.5,
+      "n": 1,
+      "dt": "practice_weekday",
+      "dayName": "Mon",
+      "dateLabel": "Sep 21, 2026",
+      "wake": 6.833,
+      "pb": [
+        2.25,
+        2.25
+      ],
+      "hw": 2.5,
+      "avail": 11.76,
+      "comm": 1.66,
+      "stTot": 1.51,
+      "perf": 7.06,
+      "dtg": 5,
+      "pracRawLo": 2.25,
+      "pracRawHi": 3,
+      "pressureSqueeze": 1,
+      "lpSqueeze": 0,
+      "adj": {
+        "practiceCap": 1,
+        "fullSleep": false,
+        "skipSchool": false,
+        "weekendWake": false,
+        "block": null,
+        "lightsOut": null,
+        "event": null,
+        "reasons": []
+      },
+      "lightsOut": 23,
+      "sleepWindow": 7.5,
+      "dateKey": "2026-09-21",
+      "isGame": false,
+      "isPrac": true,
+      "tl": [
+        {
+          "start": 23.83,
+          "dur": 7,
+          "type": "Sleep",
+          "label": "Sleep  (7h)  11:50 PM → 6:50 AM"
+        },
+        {
+          "start": 6.833,
+          "dur": 0.5,
+          "type": "Morning Routine",
+          "label": "Morning Routine"
+        },
+        {
+          "start": 7.333,
+          "dur": 0.5,
+          "type": "Commute",
+          "label": "Commute to school"
+        },
+        {
+          "start": 7.833,
+          "dur": 7,
+          "type": "Classes",
+          "label": "Classes (7h)"
+        },
+        {
+          "start": 14.833,
+          "dur": 0.5,
+          "type": "Commute",
+          "label": "Commute home"
+        },
+        {
+          "start": 15.333,
+          "dur": 0.84,
+          "type": "Homework",
+          "label": "Homework (before practice)"
+        },
+        {
+          "start": 16.173000000000002,
+          "dur": 0.33,
+          "type": "Commute",
+          "label": "Commute to practice"
+        },
+        {
+          "start": 16.503,
+          "dur": 2.25,
+          "type": "Practice",
+          "label": "Practice (maintain, 5d to game) · starts 4:30 PM"
+        },
+        {
+          "start": 18.753,
+          "dur": 0.33,
+          "type": "Commute",
+          "label": "Commute home"
+        },
+        {
+          "start": 19.083,
+          "dur": 1.66,
+          "type": "Homework",
+          "label": "Homework (after practice)"
+        },
+        {
+          "start": 20.743,
+          "dur": 0.5,
+          "type": "Dinner",
+          "label": "Dinner (30m)"
+        },
+        {
+          "start": 21.243,
+          "dur": 1.51,
+          "type": "Study",
+          "label": "Study: History · 1d to test"
+        },
+        {
+          "start": 22.75,
+          "dur": 0.5,
+          "type": "Free Time",
+          "label": "Free time  (30m)"
+        },
+        {
+          "start": 23.25,
+          "dur": 0.25,
+          "type": "Wind Down",
+          "label": "Wind down → lights out at 11:30 PM"
+        },
+        {
+          "start": 23.5,
+          "dur": 0.33,
+          "type": "Falling Asleep",
+          "label": "Falling asleep (20m)"
+        }
+      ],
+      "date": "Sep 21, 2026"
+    },
+    {
+      "Practice": 2.25,
+      "Sleep": 7,
+      "Dinner": 0.5,
+      "Free": 0.5,
+      "Study:Math": 0,
+      "Study:History": 1.51,
+      "Study:English": 0,
+      "Study:Science": 0,
+      "Meals": 0.5,
+      "n": 2,
+      "dt": "practice_weekday",
+      "dayName": "Tue",
+      "dateLabel": "Sep 22, 2026",
+      "wake": 6.833,
+      "pb": [
+        2.25,
+        2.25
+      ],
+      "hw": 2.5,
+      "avail": 11.76,
+      "comm": 1.66,
+      "stTot": 1.51,
+      "perf": 7.06,
+      "dtg": 4,
+      "pracRawLo": 2.25,
+      "pracRawHi": 3,
+      "pressureSqueeze": 1,
+      "lpSqueeze": 0,
+      "adj": {
+        "practiceCap": 1,
+        "fullSleep": false,
+        "skipSchool": false,
+        "weekendWake": false,
+        "block": null,
+        "lightsOut": null,
+        "event": null,
+        "reasons": []
+      },
+      "lightsOut": 23,
+      "sleepWindow": 7.5,
+      "dateKey": "2026-09-22",
+      "isGame": false,
+      "isPrac": true,
+      "tl": [
+        {
+          "start": 23.83,
+          "dur": 7,
+          "type": "Sleep",
+          "label": "Sleep  (7h)  11:50 PM → 6:50 AM"
+        },
+        {
+          "start": 6.833,
+          "dur": 0.5,
+          "type": "Morning Routine",
+          "label": "Morning Routine"
+        },
+        {
+          "start": 7.333,
+          "dur": 0.5,
+          "type": "Commute",
+          "label": "Commute to school"
+        },
+        {
+          "start": 7.833,
+          "dur": 7,
+          "type": "Classes",
+          "label": "Classes (7h)"
+        },
+        {
+          "start": 14.833,
+          "dur": 0.5,
+          "type": "Commute",
+          "label": "Commute home"
+        },
+        {
+          "start": 15.333,
+          "dur": 0.84,
+          "type": "Homework",
+          "label": "Homework (before practice)"
+        },
+        {
+          "start": 16.173000000000002,
+          "dur": 0.33,
+          "type": "Commute",
+          "label": "Commute to practice"
+        },
+        {
+          "start": 16.503,
+          "dur": 2.25,
+          "type": "Practice",
+          "label": "Practice (maintain, 4d to game) · starts 4:30 PM"
+        },
+        {
+          "start": 18.753,
+          "dur": 0.33,
+          "type": "Commute",
+          "label": "Commute home"
+        },
+        {
+          "start": 19.083,
+          "dur": 1.66,
+          "type": "Homework",
+          "label": "Homework (after practice)"
+        },
+        {
+          "start": 20.743,
+          "dur": 0.5,
+          "type": "Dinner",
+          "label": "Dinner (30m)"
+        },
+        {
+          "start": 21.243,
+          "dur": 1.51,
+          "type": "Study",
+          "label": "Study: History · 1d to test"
+        },
+        {
+          "start": 22.75,
+          "dur": 0.5,
+          "type": "Free Time",
+          "label": "Free time  (30m)"
+        },
+        {
+          "start": 23.25,
+          "dur": 0.25,
+          "type": "Wind Down",
+          "label": "Wind down → lights out at 11:30 PM"
+        },
+        {
+          "start": 23.5,
+          "dur": 0.33,
+          "type": "Falling Asleep",
+          "label": "Falling asleep (20m)"
+        }
+      ],
+      "date": "Sep 22, 2026"
+    },
+    {
+      "Practice": 3,
+      "Sleep": 7,
+      "Dinner": 0.5,
+      "Free": 0.5,
+      "Study:Math": 0,
+      "Study:History": 0,
+      "Study:English": 0,
+      "Study:Science": 0.76,
+      "Meals": 0.5,
+      "n": 3,
+      "dt": "practice_weekday",
+      "dayName": "Wed",
+      "dateLabel": "Sep 23, 2026",
+      "wake": 6.833,
+      "pb": [
+        2.25,
+        3
+      ],
+      "hw": 2.5,
+      "avail": 11.76,
+      "comm": 1.66,
+      "stTot": 0.76,
+      "perf": 3.76,
+      "dtg": 3,
+      "pracRawLo": 2.25,
+      "pracRawHi": 3,
+      "pressureSqueeze": 0,
+      "lpSqueeze": 0,
+      "adj": {
+        "practiceCap": 1,
+        "fullSleep": false,
+        "skipSchool": false,
+        "weekendWake": false,
+        "block": null,
+        "lightsOut": null,
+        "event": null,
+        "reasons": []
+      },
+      "lightsOut": 23,
+      "sleepWindow": 7.5,
+      "dateKey": "2026-09-23",
+      "isGame": false,
+      "isPrac": true,
+      "tl": [
+        {
+          "start": 23.83,
+          "dur": 7,
+          "type": "Sleep",
+          "label": "Sleep  (7h)  11:50 PM → 6:50 AM"
+        },
+        {
+          "start": 6.833,
+          "dur": 0.5,
+          "type": "Morning Routine",
+          "label": "Morning Routine"
+        },
+        {
+          "start": 7.333,
+          "dur": 0.5,
+          "type": "Commute",
+          "label": "Commute to school"
+        },
+        {
+          "start": 7.833,
+          "dur": 7,
+          "type": "Classes",
+          "label": "Classes (7h)"
+        },
+        {
+          "start": 14.833,
+          "dur": 0.5,
+          "type": "Commute",
+          "label": "Commute home"
+        },
+        {
+          "start": 15.333,
+          "dur": 0.84,
+          "type": "Homework",
+          "label": "Homework (before practice)"
+        },
+        {
+          "start": 16.173000000000002,
+          "dur": 0.33,
+          "type": "Commute",
+          "label": "Commute to practice"
+        },
+        {
+          "start": 16.503,
+          "dur": 3,
+          "type": "Practice",
+          "label": "Practice (maintain, 3d to game) · starts 4:30 PM"
+        },
+        {
+          "start": 19.503,
+          "dur": 0.33,
+          "type": "Commute",
+          "label": "Commute home"
+        },
+        {
+          "start": 19.833,
+          "dur": 1.66,
+          "type": "Homework",
+          "label": "Homework (after practice)"
+        },
+        {
+          "start": 21.493,
+          "dur": 0.5,
+          "type": "Dinner",
+          "label": "Dinner (30m)"
+        },
+        {
+          "start": 21.993,
+          "dur": 0.76,
+          "type": "Study",
+          "label": "Study: Science · 2d to test"
+        },
+        {
+          "start": 22.75,
+          "dur": 0.5,
+          "type": "Free Time",
+          "label": "Free time  (30m)"
+        },
+        {
+          "start": 23.25,
+          "dur": 0.25,
+          "type": "Wind Down",
+          "label": "Wind down → lights out at 11:30 PM"
+        },
+        {
+          "start": 23.5,
+          "dur": 0.33,
+          "type": "Falling Asleep",
+          "label": "Falling asleep (20m)"
+        }
+      ],
+      "date": "Sep 23, 2026"
+    },
+    {
+      "Practice": 2.25,
+      "Sleep": 7,
+      "Dinner": 0.5,
+      "Free": 0.5,
+      "Study:Math": 0,
+      "Study:History": 0,
+      "Study:English": 0,
+      "Study:Science": 1.51,
+      "Meals": 0.5,
+      "n": 4,
+      "dt": "practice_weekday",
+      "dayName": "Thu",
+      "dateLabel": "Sep 24, 2026",
+      "wake": 6.833,
+      "pb": [
+        2.25,
+        2.63
+      ],
+      "hw": 2.5,
+      "avail": 11.76,
+      "comm": 1.66,
+      "stTot": 1.51,
+      "perf": 5.25,
+      "dtg": 2,
+      "pracRawLo": 2.25,
+      "pracRawHi": 3,
+      "pressureSqueeze": 0.49,
+      "lpSqueeze": 1,
+      "adj": {
+        "practiceCap": 1,
+        "fullSleep": false,
+        "skipSchool": false,
+        "weekendWake": false,
+        "block": null,
+        "lightsOut": null,
+        "event": null,
+        "reasons": []
+      },
+      "lightsOut": 23,
+      "sleepWindow": 7.5,
+      "dateKey": "2026-09-24",
+      "isGame": false,
+      "isPrac": true,
+      "tl": [
+        {
+          "start": 23.83,
+          "dur": 7,
+          "type": "Sleep",
+          "label": "Sleep  (7h)  11:50 PM → 6:50 AM"
+        },
+        {
+          "start": 6.833,
+          "dur": 0.5,
+          "type": "Morning Routine",
+          "label": "Morning Routine"
+        },
+        {
+          "start": 7.333,
+          "dur": 0.5,
+          "type": "Commute",
+          "label": "Commute to school"
+        },
+        {
+          "start": 7.833,
+          "dur": 7,
+          "type": "Classes",
+          "label": "Classes (7h)"
+        },
+        {
+          "start": 14.833,
+          "dur": 0.5,
+          "type": "Commute",
+          "label": "Commute home"
+        },
+        {
+          "start": 15.333,
+          "dur": 0.84,
+          "type": "Homework",
+          "label": "Homework (before practice)"
+        },
+        {
+          "start": 16.173000000000002,
+          "dur": 0.33,
+          "type": "Commute",
+          "label": "Commute to practice"
+        },
+        {
+          "start": 16.503,
+          "dur": 2.25,
+          "type": "Practice",
+          "label": "Practice (maintain, 2d to game) · starts 4:30 PM"
+        },
+        {
+          "start": 18.753,
+          "dur": 0.33,
+          "type": "Commute",
+          "label": "Commute home"
+        },
+        {
+          "start": 19.083,
+          "dur": 1.66,
+          "type": "Homework",
+          "label": "Homework (after practice)"
+        },
+        {
+          "start": 20.743,
+          "dur": 0.5,
+          "type": "Dinner",
+          "label": "Dinner (30m)"
+        },
+        {
+          "start": 21.243,
+          "dur": 1.51,
+          "type": "Study",
+          "label": "Study: Science · 1d to test"
+        },
+        {
+          "start": 22.75,
+          "dur": 0.5,
+          "type": "Free Time",
+          "label": "Free time  (30m)"
+        },
+        {
+          "start": 23.25,
+          "dur": 0.25,
+          "type": "Wind Down",
+          "label": "Wind down → lights out at 11:30 PM"
+        },
+        {
+          "start": 23.5,
+          "dur": 0.33,
+          "type": "Falling Asleep",
+          "label": "Falling asleep (20m)"
+        }
+      ],
+      "date": "Sep 24, 2026"
+    },
+    {
+      "Practice": 3,
+      "Sleep": 8.43,
+      "Dinner": 0.5,
+      "Free": 1.5,
+      "Study:Math": 0,
+      "Study:History": 0,
+      "Study:English": 0,
+      "Study:Science": 0,
+      "Meals": 0.5,
+      "n": 5,
+      "dt": "practice_weekday",
+      "dayName": "Fri",
+      "dateLabel": "Sep 25, 2026",
+      "wake": 6.833,
+      "pb": [
+        2.25,
+        3
+      ],
+      "hw": 2.5,
+      "avail": 13.43,
+      "comm": 1.66,
+      "stTot": 0,
+      "perf": 3,
+      "dtg": 1,
+      "pracRawLo": 2.25,
+      "pracRawHi": 3,
+      "pressureSqueeze": 0,
+      "lpSqueeze": 0,
+      "adj": {
+        "practiceCap": 1,
+        "fullSleep": false,
+        "skipSchool": false,
+        "weekendWake": false,
+        "block": null,
+        "lightsOut": null,
+        "event": null,
+        "reasons": []
+      },
+      "lightsOut": 23,
+      "sleepWindow": 9.17,
+      "dateKey": "2026-09-25",
+      "isGame": false,
+      "isPrac": true,
+      "tl": [
+        {
+          "start": 0.07000000000000028,
+          "dur": 8.43,
+          "type": "Sleep",
+          "label": "Sleep  (8h 26m)  12:04 AM → 8:30 AM"
+        },
+        {
+          "start": 6.833,
+          "dur": 0.5,
+          "type": "Morning Routine",
+          "label": "Morning Routine"
+        },
+        {
+          "start": 7.333,
+          "dur": 0.5,
+          "type": "Commute",
+          "label": "Commute to school"
+        },
+        {
+          "start": 7.833,
+          "dur": 7,
+          "type": "Classes",
+          "label": "Classes (7h)"
+        },
+        {
+          "start": 14.833,
+          "dur": 0.5,
+          "type": "Commute",
+          "label": "Commute home"
+        },
+        {
+          "start": 15.333,
+          "dur": 0.84,
+          "type": "Homework",
+          "label": "Homework (before practice)"
+        },
+        {
+          "start": 16.173000000000002,
+          "dur": 0.33,
+          "type": "Commute",
+          "label": "Commute to practice"
+        },
+        {
+          "start": 16.503,
+          "dur": 3,
+          "type": "Practice",
+          "label": "Practice (maintain, 1d to game) · starts 4:30 PM"
+        },
+        {
+          "start": 19.503,
+          "dur": 0.33,
+          "type": "Commute",
+          "label": "Commute home"
+        },
+        {
+          "start": 19.833,
+          "dur": 1.66,
+          "type": "Homework",
+          "label": "Homework (after practice)"
+        },
+        {
+          "start": 21.493,
+          "dur": 0.5,
+          "type": "Dinner",
+          "label": "Dinner (30m)"
+        },
+        {
+          "start": 21.99,
+          "dur": 1.5,
+          "type": "Free Time",
+          "label": "Free time  (1h 30m)"
+        },
+        {
+          "start": 23.49,
+          "dur": 0.25,
+          "type": "Wind Down",
+          "label": "Wind down → lights out at 11:44 PM"
+        },
+        {
+          "start": 23.74,
+          "dur": 0.33,
+          "type": "Falling Asleep",
+          "label": "Falling asleep (20m)"
+        }
+      ],
+      "date": "Sep 25, 2026"
+    },
+    {
+      "Practice": 0,
+      "Sleep": 10,
+      "Dinner": 1,
+      "Free": 9.42,
+      "Study:Math": 0,
+      "Study:History": 0,
+      "Study:English": 0,
+      "Study:Science": 0,
+      "Meals": 1,
+      "n": 6,
+      "dt": "game_weekend",
+      "dayName": "Sat",
+      "dateLabel": "Sep 26, 2026",
+      "wake": 8.5,
+      "pb": [
+        0,
+        0
+      ],
+      "hw": 0.5,
+      "avail": 20.42,
+      "comm": 1.5,
+      "stTot": 0,
+      "perf": 0,
+      "dtg": 0,
+      "pracRawLo": 0,
+      "pracRawHi": 0,
+      "pressureSqueeze": 0,
+      "lpSqueeze": 0,
+      "adj": {
+        "practiceCap": 1,
+        "fullSleep": false,
+        "skipSchool": false,
+        "weekendWake": false,
+        "block": null,
+        "lightsOut": null,
+        "event": null,
+        "reasons": []
+      },
+      "lightsOut": 23,
+      "sleepWindow": 10.67,
+      "dateKey": "2026-09-26",
+      "isGame": true,
+      "isPrac": false,
+      "tl": [
+        {
+          "start": 0,
+          "dur": 10,
+          "type": "Sleep",
+          "label": "Sleep  (10h)  12:00 AM → 10:00 AM"
+        },
+        {
+          "start": 8.5,
+          "dur": 0.5,
+          "type": "Morning Routine",
+          "label": "Morning Routine"
+        },
+        {
+          "start": 9,
+          "dur": 0.5,
+          "type": "Homework",
+          "label": "Homework (before game)"
+        },
+        {
+          "start": 9.5,
+          "dur": 2.75,
+          "type": "Free Time",
+          "label": "Free time  (2h 45m)"
+        },
+        {
+          "start": 12.25,
+          "dur": 0.75,
+          "type": "Commute",
+          "label": "Commute to venue (game at 1:00 PM)"
+        },
+        {
+          "start": 13,
+          "dur": 2,
+          "type": "Game",
+          "label": "Game · 1:00 PM (2h)"
+        },
+        {
+          "start": 15,
+          "dur": 0.75,
+          "type": "Commute",
+          "label": "Commute home"
+        },
+        {
+          "start": 15.75,
+          "dur": 2.75,
+          "type": "Free Time",
+          "label": "Free time  (2h 45m)"
+        },
+        {
+          "start": 18.5,
+          "dur": 1,
+          "type": "Dinner",
+          "label": "Dinner (1h)"
+        },
+        {
+          "start": 19.5,
+          "dur": 3.92,
+          "type": "Free Time",
+          "label": "Free time  (3h 55m)"
+        },
+        {
+          "start": 23.42,
+          "dur": 0.25,
+          "type": "Wind Down",
+          "label": "Wind down → lights out at 11:40 PM"
+        },
+        {
+          "start": 23.67,
+          "dur": 0.33,
+          "type": "Falling Asleep",
+          "label": "Falling asleep (20m)"
+        }
+      ],
+      "date": "Sep 26, 2026"
+    },
+    {
+      "Practice": 0,
+      "Sleep": 7.5,
+      "Dinner": 1,
+      "Lunch": 1,
+      "Free": 8.75,
+      "Study:Math": 0,
+      "Study:History": 0,
+      "Study:English": 0,
+      "Study:Science": 0,
+      "Meals": 2,
+      "n": 7,
+      "dt": "rest",
+      "dayName": "Sun",
+      "dateLabel": "Sep 27, 2026",
+      "wake": 10,
+      "pb": [
+        0,
+        0
+      ],
+      "hw": 1.5,
+      "avail": 18.25,
+      "comm": 0,
+      "stTot": 0,
+      "perf": 0,
+      "dtg": -1,
+      "pracRawLo": 0,
+      "pracRawHi": 0,
+      "pressureSqueeze": 0,
+      "lpSqueeze": 0,
+      "adj": {
+        "practiceCap": 1,
+        "fullSleep": false,
+        "skipSchool": false,
+        "weekendWake": false,
+        "block": null,
+        "lightsOut": null,
+        "event": null,
+        "reasons": []
+      },
+      "lightsOut": 23,
+      "sleepWindow": 7.5,
+      "dateKey": "2026-09-27",
+      "isGame": false,
+      "isPrac": false,
+      "tl": [
+        {
+          "start": 23.33,
+          "dur": 7.5,
+          "type": "Sleep",
+          "label": "Sleep  (7h 30m)  11:20 PM → 6:50 AM"
+        },
+        {
+          "start": 10,
+          "dur": 0.5,
+          "type": "Morning Routine",
+          "label": "Morning Routine"
+        },
+        {
+          "start": 10.5,
+          "dur": 1.5,
+          "type": "Free Time",
+          "label": "Free time  (1h 30m)"
+        },
+        {
+          "start": 12,
+          "dur": 1,
+          "type": "Lunch",
+          "label": "Lunch (1h)"
+        },
+        {
+          "start": 13,
+          "dur": 1.5,
+          "type": "Homework",
+          "label": "Homework"
+        },
+        {
+          "start": 14.5,
+          "dur": 4,
+          "type": "Free Time",
+          "label": "Free time  (4h)"
+        },
+        {
+          "start": 18.5,
+          "dur": 1,
+          "type": "Dinner",
+          "label": "Dinner (1h)"
+        },
+        {
+          "start": 19.5,
+          "dur": 3.25,
+          "type": "Free Time",
+          "label": "Free time  (3h 15m)"
+        },
+        {
+          "start": 22.75,
+          "dur": 0.25,
+          "type": "Wind Down",
+          "label": "Wind down → lights out at 11:00 PM"
+        },
+        {
+          "start": 23,
+          "dur": 0.33,
+          "type": "Falling Asleep",
+          "label": "Falling asleep (20m)"
+        }
+      ],
+      "date": "Sep 27, 2026"
+    }
+  ]
+}

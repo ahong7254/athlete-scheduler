@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROTOTYPE · Training minimum vs protected days</title>
+<style>
+  :root { --bg:#f6eee1; --card:#fffaf2; --line:rgba(92,58,30,.16); --text:#3b2a1e; --muted:#7a5f48; --accent:#b4541a; --warn:#b03a2e; --ok:#4f7a2a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.5 'Segoe UI', -apple-system, sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 60px; }
+  .proto { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; color:#fff; background:var(--warn); padding:2px 8px; border-radius:4px; }
+  h1 { font-size: 22px; margin: 8px 0 4px; }
+  .intro { color: var(--muted); max-width: 900px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 26px 0 10px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .rules { display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 900px) { .rules { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .rules { grid-template-columns: 1fr; } }
+  .rule h3 { margin: 0 0 2px; font-size: 14px; }
+  .rule .how { font-size: 12px; color: var(--muted); min-height: 54px; }
+  .big { font-size: 20px; font-weight: 600; }
+  .row { display:flex; justify-content:space-between; font-size:12px; padding:2px 0; }
+  .day { display:flex; justify-content:space-between; font-size:12px; padding:3px 0; border-top: 1px dashed var(--line); }
+  .over { color: var(--warn); font-weight: 600; }
+  .short { color: var(--warn); }
+  .ok { color: var(--ok); }
+  .changed { background: #fff1c2; border-radius: 3px; }
+  .verdict { margin-top: 8px; font-size: 12px; padding: 6px 8px; border-radius: 6px; background: #f2e7d6; }
+  table { width:100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align:left; padding: 6px 6px; border-bottom: 1px solid var(--line); }
+  th { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+  button { font: inherit; font-size: 12px; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px; cursor: pointer; color: var(--text); }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  select { font: inherit; font-size: 12px; padding: 3px 4px; border-radius: 6px; border: 1px solid var(--line); background: #fff; }
+  .controls { display:flex; flex-wrap:wrap; gap: 16px; align-items:center; }
+  .tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom: 10px; }
+  .steps { display:flex; flex-direction:column; gap:6px; margin-top: 10px; }
+  .steps button { text-align:left; }
+  .steps button.done { opacity: .45; }
+  .steps button.next { border-color: var(--accent); box-shadow: 0 0 0 2px #b4541a22; }
+  .note { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="proto">PROTOTYPE · THROWAWAY</span>
+  <h1>Training minimum vs. protected days</h1>
+  <p class="intro">
+    <b>The question:</b> the scheduler has a weekly training minimum (swim + weights ≥ 40% of 14h = 5.6h). It also has
+    <i>protected</i> days: the recovery check (back off / take it easier) and events (travel, big test, rest day) put a
+    soft cap on practice, and "sick" is a hard zero. Today the minimum wins: when protected days leave too few hours, the plan
+    pushes practice back up — sometimes on the very days it was told to protect. <b>Which rule should decide how the
+    minimum and the protections interact?</b> Set up a week below and compare the four candidate rules side by side.
+    This is a simplified copy of the scheduler's training decision (same caps, penalties and slider math), not the real thing.
+  </p>
+
+  <h2>The week</h2>
+  <div class="card">
+    <div class="controls" style="margin-bottom:10px">
+      <span>Priority slider:
+        <button data-act="slider" data-v="recovery">Recovery</button>
+        <button data-act="slider" data-v="balanced">Balanced</button>
+        <button data-act="slider" data-v="performance">Performance</button></span>
+      <span>Sport profile:
+        <button data-act="profile" data-v="maintain">Maintain</button>
+        <button data-act="profile" data-v="taper">Taper (game Sat)</button></span>
+      <span>Training minimum:
+        <button data-act="minDown">−5%</button> <b id="minPct"></b> <button data-act="minUp">+5%</button></span>
+      <button data-act="reset">Reset week</button>
+    </div>
+    <table>
+      <thead><tr><th>Day</th><th>Swim practice</th><th>Weights</th><th>Protection</th><th>Test-prep evening</th><th>Swim ceiling</th><th>Cap</th></tr></thead>
+      <tbody id="week"></tbody>
+    </table>
+    <p class="note" id="weekNote"></p>
+  </div>
+
+  <h2>What each rule plans</h2>
+  <div class="rules" id="rules"></div>
+
+  <h2>Guided walkthroughs</h2>
+  <div class="card">
+    <div class="tabs" id="tabs"></div>
+    <div id="scenario"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// PURE MODULE — the part worth lifting into the real scheduler.
+// No DOM in here. planWeek(week, rule) → the training plan for that rule.
+// ═══════════════════════════════════════════════════════════════════════
+const TrainingRules = (() => {
+  const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const SWIM_WEEK_MAX = 12, WEIGHTS_WEEK_MAX = 2, WEIGHTS_SESSION = 1, DAY_FLOOR = 1, SWIM_MAX = 2, WEIGHTS_VALUE = 0.8;
+  const MIN_SHORTFALL_PENALTY = 1000;      // today's rule: the minimum is effectively hard
+  const RANKED_MIN_PENALTY = 2.5;          // rule C: below back-off/rest (3), above travel/test (2) and take-it-easier (1.5)
+
+  // Same caps/penalties as the scheduler (SOFT_PENALTY, REC_EFFECT, DAY_EVENT_TYPES)
+  const PROTECTIONS = {
+    none:     { label: 'None',                    cap: 1,    pen: 0 },
+    backoff:  { label: 'Back off (day 1–2)',      cap: 0.4,  pen: 3 },
+    backoff3: { label: 'Back off (day 3)',        cap: 0.7,  pen: 3 },
+    easier:   { label: 'Take it easier',          cap: 0.75, pen: 1.5 },
+    travel:   { label: 'Travel',                  cap: 0.5,  pen: 2 },
+    test:     { label: 'Big test day',            cap: 0.5,  pen: 2 },
+    testEve:  { label: 'Night before big test',   cap: 0.6,  pen: 2 },
+    rest:     { label: 'Rest day',                cap: 0,    pen: 3 },
+    sick:     { label: 'Sick (hard)',             cap: 0,    pen: 0, hard: true },
+  };
+  // Practice value per day (UCURVES) and daily swim ceiling share (PBOUNDS hi) by profile; taper assumes a Saturday game.
+  const PROFILES = {
+    maintain: { value: [1, 1, 1, 1, 1, 1, 1],         ceil: [1, 1, 1, 1, 1, 1, 1] },
+    taper:    { value: [1.8, 2.0, 1.4, 0.7, 0.3, 0, 0], ceil: [1, 1, 0.85, 0.6, 0.35, 0, 0], game: 5, recovery: 6 },
+  };
+  const SLIDER = { recovery: 0, balanced: 0.5, performance: 1 };
+
+  const RULES = {
+    current:  { name: 'A · Today: minimum wins',
+                how: 'The 5.6h minimum is near-absolute. If protected days leave too few hours, the plan goes over their caps to make it up.' },
+    shrink:   { name: 'B · Shrink by capped share',
+                how: 'The minimum shrinks in proportion to the hours the caps remove (a 40% cap removes 60% of that day\'s share).' },
+    exclude:  { name: 'C · Protected days don\'t count',
+                how: 'The minimum only applies to unprotected days: any protected day removes its whole share.' },
+    ranked:   { name: 'D · Ranked soft minimum',
+                how: 'The minimum stays 5.6h but each hour short costs 2.5: never worth breaking back-off/rest (3); breaks softer caps only if their penalty plus the time\'s other value is below 2.5.' },
+  };
+
+  function initialWeek() {
+    return { slider: 'balanced', profile: 'maintain', minPct: 40,
+      days: DAYS.map((name, i) => ({ name, practice: i < 6, weights: i === 1 || i === 3, protect: 'none', testPrep: false })) };
+  }
+
+  // Per-day ceilings, caps, floors and values for the current week
+  function describeDays(week) {
+    const a = SLIDER[week.slider], perfM = Math.pow(3, -1 + 2 * a), wellM = Math.pow(3, 1 - 2 * a);
+    const prof = PROFILES[week.profile];
+    return week.days.map((d, i) => {
+      const p = PROTECTIONS[d.protect];
+      const isGame = prof.game === i, isRecovery = prof.recovery === i;
+      const swimCeil = d.practice && !isGame && !isRecovery ? +(SWIM_MAX * prof.ceil[i]).toFixed(2) : 0;
+      const wtsCeil = d.weights && !isGame && !isRecovery ? WEIGHTS_SESSION : 0;
+      const hardZero = !!p.hard;
+      const alt = d.testPrep ? Math.max(0.4 * wellM, 1.5 * perfM) : 0.4 * wellM;   // value of the time's next-best use
+      return { name: d.name, protect: d.protect, label: p.label, cap: p.cap, pen: p.pen, hard: hardZero, isGame,
+               swimCeil: hardZero ? 0 : swimCeil, wtsCeil: hardZero ? 0 : wtsCeil,
+               swimValue: prof.value[i] * perfM - alt, wtsValue: WEIGHTS_VALUE * prof.value[i] * perfM - alt };
+    });
+  }
+
+  function effectiveMinimum(week, days, ruleKey) {
+    const base = +(week.minPct / 100 * (SWIM_WEEK_MAX + WEIGHTS_WEEK_MAX)).toFixed(2);
+    const full = days.reduce((s, d) => s + rawCeil(week, d), 0);
+    if (ruleKey === 'shrink' && full > 0) {
+      const kept = days.reduce((s, d) => s + rawCeil(week, d) * (d.hard ? 0 : d.cap), 0);
+      return +(base * kept / full).toFixed(2);
+    }
+    if (ruleKey === 'exclude' && full > 0) {
+      const kept = days.reduce((s, d) => s + (d.protect === 'none' ? rawCeil(week, d) : 0), 0);
+      return +(base * kept / full).toFixed(2);
+    }
+    return base;
+  }
+  // Ceiling the day would have with no protection at all (for proportional shares)
+  function rawCeil(week, d) {
+    const i = TrainingRules.DAYS.indexOf(d.name), prof = PROFILES[week.profile], src = week.days[i];
+    const off = prof.game === i || prof.recovery === i;
+    return (src.practice && !off ? SWIM_MAX * prof.ceil[i] : 0) + (src.weights && !off ? WEIGHTS_SESSION : 0);
+  }
+
+  // Exact for this structure: separable linear values, two weekly maxima, one weekly minimum with a penalty.
+  function planWeek(week, ruleKey) {
+    const days = describeDays(week);
+    const minimum = effectiveMinimum(week, days, ruleKey);
+    const shortPenalty = ruleKey === 'ranked' ? RANKED_MIN_PENALTY : MIN_SHORTFALL_PENALTY;
+    const plan = days.map(d => ({ ...d, swim: 0, weights: 0, over: 0 }));
+    let swimLeft = SWIM_WEEK_MAX, wtsLeft = WEIGHTS_WEEK_MAX;
+
+    // Practice-day floor (never above the day's soft cap)
+    plan.forEach(d => { if (d.swimCeil > 0) { const f = Math.min(DAY_FLOOR, d.swimCeil * d.cap); d.swim = f; swimLeft -= f; } });
+
+    const segs = [];
+    plan.forEach((d, i) => {
+      const within = d.swimCeil * d.cap - d.swim, overAmt = d.swimCeil * (1 - d.cap);
+      if (within > 1e-9) segs.push({ i, kind: 'swim', amt: within, value: d.swimValue, over: false });
+      if (overAmt > 1e-9) segs.push({ i, kind: 'swim', amt: overAmt, value: d.swimValue - d.pen, over: true });
+      const wIn = d.wtsCeil * d.cap, wOver = d.wtsCeil * (1 - d.cap);
+      if (wIn > 1e-9) segs.push({ i, kind: 'weights', amt: wIn, value: d.wtsValue, over: false });
+      if (wOver > 1e-9) segs.push({ i, kind: 'weights', amt: wOver, value: d.wtsValue - d.pen, over: true });
+    });
+    segs.sort((x, y) => y.value - x.value || (x.over - y.over));
+
+    const total = () => plan.reduce((s, d) => s + d.swim + d.weights, 0);
+    const take = (sg, amt) => {
+      const room = sg.kind === 'swim' ? swimLeft : wtsLeft;
+      const h = Math.max(0, Math.min(amt, sg.amt, room));
+      if (h <= 1e-9) return 0;
+      plan[sg.i][sg.kind === 'swim' ? 'swim' : 'weights'] += h;
+      if (sg.over) plan[sg.i].over += h;
+      if (sg.kind === 'swim') swimLeft -= h; else wtsLeft -= h;
+      sg.amt -= h;
+      return h;
+    };
+    segs.forEach(sg => { if (sg.value > 0) take(sg, Infinity); });               // worth doing on its own
+    segs.forEach(sg => {                                                         // worth doing only to meet the minimum
+      const need = minimum - total();
+      if (need > 1e-9 && sg.value > -shortPenalty) take(sg, need);
+    });
+
+    const r = v => Math.round(v * 100) / 100;
+    plan.forEach(d => { d.swim = r(d.swim); d.weights = r(d.weights); d.over = r(d.over); });
+    const t = r(total());
+    const overByType = {};
+    plan.forEach(d => { if (d.over > 0) overByType[d.label] = r((overByType[d.label] || 0) + d.over); });
+    return { rule: ruleKey, minimum, total: t, shortfall: r(Math.max(0, minimum - t)), overByType, days: plan,
+             brokeBackoff: plan.some(d => d.over > 0 && (d.protect === 'backoff' || d.protect === 'backoff3' || d.protect === 'rest')) };
+  }
+
+  // Reducer for the demo's actions
+  function reduce(week, action) {
+    const w = JSON.parse(JSON.stringify(week));
+    switch (action.type) {
+      case 'reset': return initialWeek();
+      case 'slider': w.slider = action.value; return w;
+      case 'profile': w.profile = action.value; return w;
+      case 'minPct': w.minPct = Math.max(0, Math.min(100, action.value)); return w;
+      case 'setDay': Object.assign(w.days[action.day], action.patch); return w;
+      default: return w;
+    }
+  }
+
+  return { DAYS, PROTECTIONS, RULES, initialWeek, describeDays, planWeek, reduce };
+})();
+
+// ═══════════════════════════════════════════════════════════════════════
+// THROWAWAY PAGE — renders the week and the four plans.
+// ═══════════════════════════════════════════════════════════════════════
+const { DAYS, PROTECTIONS, RULES } = TrainingRules;
+let week = TrainingRules.initialWeek();
+let previous = null;
+const fmt = h => { const hh = Math.floor(h + 1e-9), mm = Math.round((h - hh) * 60); return mm === 60 ? `${hh + 1}h` : hh && mm ? `${hh}h ${mm}m` : hh ? `${hh}h` : `${mm}m`; };
+
+function dispatch(action) { previous = Object.fromEntries(Object.keys(RULES).map(k => [k, TrainingRules.planWeek(week, k)])); week = TrainingRules.reduce(week, action); render(); }
+
+function render() {
+  document.querySelectorAll('[data-act="slider"]').forEach(b => b.classList.toggle('on', b.dataset.v === week.slider));
+  document.querySelectorAll('[data-act="profile"]').forEach(b => b.classList.toggle('on', b.dataset.v === week.profile));
+  document.getElementById('minPct').textContent = `${week.minPct}% = ${(week.minPct / 100 * 14).toFixed(1)}h`;
+  const desc = TrainingRules.describeDays(week);
+  document.getElementById('week').innerHTML = week.days.map((d, i) => `<tr>
+    <td><b>${d.name}</b>${desc[i].isGame ? ' <span class="note">(game)</span>' : ''}</td>
+    <td><input type="checkbox" ${d.practice ? 'checked' : ''} onchange="dispatch({type:'setDay',day:${i},patch:{practice:this.checked}})"></td>
+    <td><input type="checkbox" ${d.weights ? 'checked' : ''} onchange="dispatch({type:'setDay',day:${i},patch:{weights:this.checked}})"></td>
+    <td><select onchange="dispatch({type:'setDay',day:${i},patch:{protect:this.value}})">${Object.entries(PROTECTIONS).map(([k, p]) => `<option value="${k}" ${d.protect === k ? 'selected' : ''}>${p.label}</option>`).join('')}</select></td>
+    <td><input type="checkbox" ${d.testPrep ? 'checked' : ''} onchange="dispatch({type:'setDay',day:${i},patch:{testPrep:this.checked}})"></td>
+    <td>${fmt(desc[i].swimCeil)}</td>
+    <td>${desc[i].hard ? 'hard 0' : desc[i].cap < 1 ? `${Math.round(desc[i].cap * 100)}% (penalty ${desc[i].pen})` : '—'}</td></tr>`).join('');
+  document.getElementById('weekNote').textContent = 'Weekly limits: swim ≤ 12h, weights ≤ 2h (1h sessions), at least 1h of swim on each practice day (never above its cap). "Test-prep evening" makes that day\'s time more valuable for study.';
+
+  document.getElementById('rules').innerHTML = Object.entries(RULES).map(([k, rule]) => {
+    const p = TrainingRules.planWeek(week, k), prev = previous?.[k];
+    const ch = (a, b) => prev && Math.abs(a - b) > 0.005 ? 'changed' : '';
+    const overTxt = Object.entries(p.overByType).map(([t, h]) => `${fmt(h)} over "${t}"`).join(', ');
+    const verdict = p.brokeBackoff ? `<span class="over">Breaks a back-off / rest day.</span>`
+      : overTxt ? `Goes over softer caps only (${overTxt}).`
+      : p.shortfall > 0 ? `<span class="short">Minimum not met — the banner would warn.</span>`
+      : `<span class="ok">Respects every protection and meets its minimum.</span>`;
+    return `<div class="card rule">
+      <h3>${rule.name}</h3><div class="how">${rule.how}</div>
+      <div class="row"><span>Training planned</span><span class="big ${ch(p.total, prev?.total ?? p.total)}">${fmt(p.total)}</span></div>
+      <div class="row"><span>Minimum used</span><span class="${ch(p.minimum, prev?.minimum ?? p.minimum)}">${fmt(p.minimum)}</span></div>
+      <div class="row"><span>Short of minimum</span><span class="${p.shortfall > 0 ? 'short' : ''} ${ch(p.shortfall, prev?.shortfall ?? p.shortfall)}">${p.shortfall > 0 ? fmt(p.shortfall) : '—'}</span></div>
+      ${p.days.map((d, i) => {
+        const pd = prev?.days[i]; const tot = d.swim + d.weights;
+        return `<div class="day ${pd && Math.abs(tot - (pd.swim + pd.weights)) > 0.005 ? 'changed' : ''}"><span>${d.name}${d.protect !== 'none' ? ` <span class="note">· ${d.label}</span>` : ''}</span>
+          <span>${tot > 0 ? fmt(d.swim) + (d.weights > 0 ? ` + ${fmt(d.weights)} wts` : '') : '—'}${d.over > 0 ? ` <span class="over">+${fmt(d.over)} over cap</span>` : ''}</span></div>`; }).join('')}
+      <div class="verdict">${verdict}</div></div>`;
+  }).join('');
+  renderScenario();
+}
+
+// ── Guided walkthroughs ──
+const set = (day, patch) => ({ type: 'setDay', day: DAYS.indexOf(day), patch });
+const SCENARIOS = [
+  { title: '1 · Back-off on a 3-practice week',
+    text: 'A light week (swim Mon/Wed/Fri, weights Thu) and the recovery check says "back off" for Mon–Tue, 70% on Wed. Watch rule A push practice back over the back-off caps at the Recovery slider just to reach 5.6h — the opposite of what the warning asked for.',
+    steps: [['Light week: swim Mon, Wed, Fri only', [set('Tue', { practice: false }), set('Thu', { practice: false }), set('Sat', { practice: false }), set('Tue', { weights: false })]],
+            ['Recovery check: back off Mon', [set('Mon', { protect: 'backoff' })]],
+            ['Back off Tue', [set('Tue', { protect: 'backoff' })]],
+            ['Wed is day 3 (70%)', [set('Wed', { protect: 'backoff3' })]],
+            ['Slider to Recovery', [{ type: 'slider', value: 'recovery' }]]] },
+  { title: '2 · Sick most of the week',
+    text: 'Sick Tue–Sat is a hard zero. No rule can practice then, so the question is whether the plan should still demand 5.6h (and warn) or recognise that the week shrank.',
+    steps: [['Sick Tue', [set('Tue', { protect: 'sick' })]], ['Sick Wed', [set('Wed', { protect: 'sick' })]], ['Sick Thu', [set('Thu', { protect: 'sick' })]],
+            ['Sick Fri', [set('Fri', { protect: 'sick' })]], ['Sick Sat', [set('Sat', { protect: 'sick' })]]] },
+  { title: '3 · Travel + test weekend, then back-off',
+    text: 'Travel Monday, SAT on Saturday (Friday is the night before), on a 3-practice week at the Recovery slider. Then a back-off warning arrives for Wednesday. Watch which rules bend travel/test caps but hold the back-off day.',
+    steps: [['Light week: swim Mon, Wed, Fri only', [set('Tue', { practice: false }), set('Thu', { practice: false }), set('Sat', { practice: false })]],
+            ['Travel Monday', [set('Mon', { protect: 'travel' })]], ['Friday: night before test', [set('Fri', { protect: 'testEve' })]],
+            ['Slider to Recovery', [{ type: 'slider', value: 'recovery' }]], ['Back off Wednesday', [set('Wed', { protect: 'backoff' })]]] },
+  { title: '4 · Taper peak vs "take it easier"',
+    text: 'Taper profile: Mon/Tue are peak days (practice worth up to 2× normal). A "take it easier" verdict (penalty 1.5) lands on them at Balanced. Every rule goes over — not because of the minimum but because the peak value beats the penalty. A separate decision: should penalties scale with the profile?',
+    steps: [['Taper profile (game Saturday)', [{ type: 'profile', value: 'taper' }]], ['Take it easier Mon', [set('Mon', { protect: 'easier' })]], ['Take it easier Tue', [set('Tue', { protect: 'easier' })]]] },
+];
+let tab = 0, stepIdx = 0;
+function startScenario(i) { tab = i; stepIdx = 0; previous = null; week = TrainingRules.initialWeek(); render(); }
+function runStep(i) { if (i !== stepIdx) return; previous = Object.fromEntries(Object.keys(RULES).map(k => [k, TrainingRules.planWeek(week, k)]));
+  SCENARIOS[tab].steps[i][1].forEach(a => { week = TrainingRules.reduce(week, a); }); stepIdx++; render(); }
+function renderScenario() {
+  document.getElementById('tabs').innerHTML = SCENARIOS.map((s, i) => `<button class="${i === tab ? 'on' : ''}" onclick="startScenario(${i})">${s.title}</button>`).join('');
+  const s = SCENARIOS[tab];
+  document.getElementById('scenario').innerHTML = `<p>${s.text}</p><p class="note">Clicking a tab resets the week. Press the steps in order and watch the four plans above.</p>
+    <div class="steps">${s.steps.map(([label], i) => `<button class="${i < stepIdx ? 'done' : i === stepIdx ? 'next' : ''}" onclick="runStep(${i})">${i + 1}. ${label}</button>`).join('')}</div>`;
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act;
+  if (a === 'slider') dispatch({ type: 'slider', value: b.dataset.v });
+  if (a === 'profile') dispatch({ type: 'profile', value: b.dataset.v });
+  if (a === 'minUp') dispatch({ type: 'minPct', value: week.minPct + 5 });
+  if (a === 'minDown') dispatch({ type: 'minPct', value: week.minPct - 5 });
+  if (a === 'reset') { previous = null; week = TrainingRules.initialWeek(); render(); }
+});
+render();
+</script>
+</body>
+</html>

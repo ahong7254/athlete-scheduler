@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROTOTYPE · Study blocks and breaks</title>
+<style>
+  :root { --bg:#f6eee1; --card:#fffaf2; --line:rgba(92,58,30,.16); --text:#3b2a1e; --muted:#7a5f48; --accent:#b4541a; --warn:#b03a2e; --ok:#4f7a2a;
+          --study:#5f7d1f; --brk:#c9b98f; --sleep:#3d5a80; --wd:#6d5f8e; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.5 'Segoe UI', -apple-system, sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 60px; }
+  .proto { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; color:#fff; background:var(--warn); padding:2px 8px; border-radius:4px; }
+  h1 { font-size: 22px; margin: 8px 0 4px; }
+  .intro { color: var(--muted); max-width: 920px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 26px 0 10px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .rules { display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 900px) { .rules { grid-template-columns: 1fr 1fr; } } @media (max-width: 560px) { .rules { grid-template-columns: 1fr; } }
+  .rule h3 { margin: 0 0 2px; font-size: 14px; } .how { font-size: 12px; color: var(--muted); min-height: 52px; }
+  .row { display:flex; justify-content:space-between; font-size:12px; padding:2px 0; }
+  .big { font-size: 18px; font-weight: 600; }
+  .bar { position: relative; height: 26px; background: #efe3cf; border-radius: 5px; overflow: hidden; margin: 8px 0 4px; }
+  .seg { position:absolute; top:2px; bottom:2px; border-radius:3px; }
+  .axis { display:flex; justify-content:space-between; font-size:10px; color: var(--muted); }
+  .list { font-size: 12px; margin-top: 6px; max-height: 210px; overflow:auto; }
+  .list div { display:flex; justify-content:space-between; border-top: 1px dashed var(--line); padding: 2px 0; }
+  .warn { color: var(--warn); font-weight: 600; } .ok { color: var(--ok); }
+  .changed { background:#fff1c2; border-radius:3px; }
+  .verdict { margin-top: 8px; font-size: 12px; padding: 6px 8px; border-radius: 6px; background: #f2e7d6; }
+  button { font: inherit; font-size: 12px; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px; cursor: pointer; color: var(--text); }
+  button:hover { border-color: var(--accent); color: var(--accent); } button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .controls { display:flex; flex-wrap:wrap; gap: 14px; align-items:center; }
+  .tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom: 10px; }
+  .steps { display:flex; flex-direction:column; gap:6px; margin-top: 10px; } .steps button { text-align:left; }
+  .steps button.done { opacity:.45; } .steps button.next { border-color: var(--accent); box-shadow: 0 0 0 2px #b4541a22; }
+  .note { font-size: 12px; color: var(--muted); }
+  table { border-collapse: collapse; font-size: 13px; } td, th { padding: 4px 10px 4px 0; text-align:left; }
+  th { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="proto">PROTOTYPE · THROWAWAY</span>
+  <h1>Study blocks and breaks</h1>
+  <p class="intro">
+    <b>The question:</b> today the scheduler can give one subject up to 8h in a day and lays each subject out as a single
+    unbroken block (the stress test found 400+ blocks longer than 4h). <b>How big should a study block be, how often
+    should breaks come, and what should happen to hours that no longer fit?</b> Below is one evening (after dinner until
+    wind-down) with the hours the optimizer asked for. Four candidate rules lay it out side by side. Breaks are counted
+    as real time: either the plan budgets for them, or they push bedtime later.
+  </p>
+
+  <h2>The evening</h2>
+  <div class="card">
+    <div class="controls">
+      <span>Evening free from <b id="startTxt"></b> <button data-act="start" data-d="-0.25">−15m</button><button data-act="start" data-d="0.25">+15m</button></span>
+      <span>Lights out <b id="endTxt"></b> <button data-act="end" data-d="-0.25">−15m</button><button data-act="end" data-d="0.25">+15m</button></span>
+      <button data-act="reset">Reset</button>
+    </div>
+    <table style="margin-top:10px"><thead><tr><th>Subject</th><th>Hours asked for tonight</th><th>Test</th><th></th></tr></thead><tbody id="subjects"></tbody></table>
+    <p class="note">Hours "asked for" are what the optimizer allocated for tonight. Anything a rule can't fit tonight is either moved to earlier days (if the rule budgets for it) or pushes lights-out later (if it doesn't).</p>
+  </div>
+
+  <h2>What each rule lays out</h2>
+  <div class="rules" id="rules"></div>
+
+  <h2>Guided walkthroughs</h2>
+  <div class="card"><div class="tabs" id="tabs"></div><div id="scenario"></div></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// PURE MODULE — liftable into layoutDay's studyUntil(). No DOM.
+// layoutEvening(evening, rule) → blocks, what didn't fit, and the bedtime it implies.
+// ═══════════════════════════════════════════════════════════════════════
+const StudyRules = (() => {
+  const RULES = {
+    today:     { name: 'A · Today', cap: Infinity, every: Infinity, brk: 0, interleave: false, budgetBreaks: false,
+                 how: 'No daily cap, no breaks, each subject in one block. Whatever doesn\'t fit before lights-out pushes bedtime later.' },
+    cap2:      { name: 'B · 2h cap, 5m per 45m', cap: 2, every: 0.75, brk: 5 / 60, interleave: false, budgetBreaks: true,
+                 how: 'Each subject ≤ 2h tonight; a 5-minute break after every 45 minutes, budgeted. Extra hours move to earlier days.' },
+    cap15:     { name: 'C · 1.5h cap, 10m per 50m', cap: 1.5, every: 50 / 60, brk: 10 / 60, interleave: false, budgetBreaks: true,
+                 how: 'Each subject ≤ 1.5h; 10-minute break every 50 minutes (a "school period" rhythm). Extra hours move earlier.' },
+    interleave:{ name: 'D · 2h cap, rotate subjects', cap: 2, every: 0.75, brk: 5 / 60, interleave: true, budgetBreaks: true,
+                 how: 'Same as B, but subjects take turns in 45-minute chunks (Math, History, Math…) instead of finishing one first.' },
+  };
+
+  function initial() {
+    return { start: 20.0, end: 22.75, subjects: [
+      { name: 'Math', hours: 3, test: 'tomorrow' }, { name: 'History', hours: 1.5, test: 'in 2 days' }, { name: 'English', hours: 1, test: '—' } ] };
+  }
+
+  function layoutEvening(ev, ruleKey) {
+    const R = RULES[ruleKey];
+    // 1. Daily cap per subject
+    const want = ev.subjects.map(s => ({ name: s.name, tonight: Math.min(s.hours, R.cap), moved: Math.max(0, s.hours - R.cap) }));
+    // 2. Chunk order: one subject at a time (most urgent first = listed order), or rotate
+    const chunks = [];
+    const chunkLen = isFinite(R.every) ? R.every : Infinity;
+    if (R.interleave) {
+      const left = want.map(w => w.tonight);
+      let any = true;
+      while (any) { any = false; want.forEach((w, i) => { if (left[i] > 1e-9) { const c = Math.min(chunkLen, left[i]); chunks.push({ name: w.name, dur: c }); left[i] -= c; any = true; } }); }
+    } else {
+      want.forEach(w => { let left = w.tonight; while (left > 1e-9) { const c = Math.min(chunkLen, left); chunks.push({ name: w.name, dur: c }); left -= c; } });
+    }
+    // 3. Place with breaks between chunks; if breaks are budgeted, stop at lights-out and move the rest earlier
+    const blocks = []; let cur = ev.start; let overflow = 0;
+    chunks.forEach((c, i) => {
+      const room = ev.end - cur;
+      if (R.budgetBreaks && room <= 1e-9) { want.find(w => w.name === c.name).moved += c.dur; return; }
+      const dur = R.budgetBreaks ? Math.min(c.dur, room) : c.dur;
+      if (R.budgetBreaks && dur < c.dur) want.find(w => w.name === c.name).moved += c.dur - dur;
+      const last = blocks[blocks.length - 1];
+      if (last && last.type === 'study' && last.name === c.name && !R.brk) last.dur += dur;
+      else blocks.push({ type: 'study', name: c.name, start: cur, dur });
+      cur += dur;
+      const more = chunks.slice(i + 1).length > 0;
+      if (more && R.brk && (!R.budgetBreaks || ev.end - cur > R.brk + 1e-9)) { blocks.push({ type: 'break', start: cur, dur: R.brk }); cur += R.brk; }
+    });
+    if (!R.budgetBreaks) overflow = Math.max(0, cur - ev.end);
+    const breakTime = blocks.filter(b => b.type === 'break').reduce((a, b) => a + b.dur, 0);
+    const longest = Math.max(0, ...blocks.filter(b => b.type === 'study').map(b => b.dur));
+    return { blocks, lightsOut: Math.max(ev.end, cur), overflow, breakTime, longest,
+             studied: blocks.filter(b => b.type === 'study').reduce((a, b) => a + b.dur, 0),
+             moved: want.filter(w => w.moved > 1e-9).map(w => ({ name: w.name, hours: w.moved })) };
+  }
+
+  function reduce(ev, a) {
+    const e = JSON.parse(JSON.stringify(ev));
+    if (a.type === 'reset') return initial();
+    if (a.type === 'start') e.start = Math.min(e.end - 0.5, Math.max(15, e.start + a.d));
+    if (a.type === 'end') e.end = Math.max(e.start + 0.5, Math.min(26, e.end + a.d));
+    if (a.type === 'hours') e.subjects[a.i].hours = Math.max(0, Math.min(6, e.subjects[a.i].hours + a.d));
+    if (a.type === 'set') Object.assign(e, a.patch);
+    return e;
+  }
+  return { RULES, initial, layoutEvening, reduce };
+})();
+
+// ═══════════════════════════════════════════════════════════════════════
+// THROWAWAY PAGE
+// ═══════════════════════════════════════════════════════════════════════
+const COLORS = { Math: '#5f7d1f', History: '#7f9a3a', English: '#a3b866' };
+let ev = StudyRules.initial(), prev = null;
+const fmtT = t => { t = ((t % 24) + 24) % 24; const h = Math.floor(t), m = Math.round((t - h) * 60); return m === 60 ? fmtT(h + 1) : `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
+const fmtD = h => { const hh = Math.floor(h + 1e-9), mm = Math.round((h - hh) * 60); return mm === 60 ? `${hh + 1}h` : hh && mm ? `${hh}h ${mm}m` : hh ? `${hh}h` : `${mm}m`; };
+const snapshot = () => Object.fromEntries(Object.keys(StudyRules.RULES).map(k => [k, StudyRules.layoutEvening(ev, k)]));
+function dispatch(a) { prev = snapshot(); ev = StudyRules.reduce(ev, a); render(); }
+
+function render() {
+  document.getElementById('startTxt').textContent = fmtT(ev.start);
+  document.getElementById('endTxt').textContent = fmtT(ev.end);
+  document.getElementById('subjects').innerHTML = ev.subjects.map((s, i) => `<tr><td><b>${s.name}</b></td>
+    <td><button onclick="dispatch({type:'hours',i:${i},d:-0.5})">−30m</button> <b>${fmtD(s.hours)}</b> <button onclick="dispatch({type:'hours',i:${i},d:0.5})">+30m</button></td><td>${s.test}</td></tr>`).join('');
+  const span = Math.max(ev.end + 1.5, ...Object.keys(StudyRules.RULES).map(k => StudyRules.layoutEvening(ev, k).lightsOut + 0.25)) - ev.start;
+  const x = t => ((t - ev.start) / span * 100).toFixed(2);
+  document.getElementById('rules').innerHTML = Object.entries(StudyRules.RULES).map(([k, R]) => {
+    const p = StudyRules.layoutEvening(ev, k), q = prev?.[k];
+    const ch = (a, b) => q && Math.abs(a - b) > 0.005 ? 'changed' : '';
+    const segs = p.blocks.map(b => `<div class="seg" title="${b.type === 'break' ? 'Break' : b.name} ${fmtT(b.start)}–${fmtT(b.start + b.dur)}" style="left:${x(b.start)}%;width:${(b.dur / span * 100).toFixed(2)}%;background:${b.type === 'break' ? 'var(--brk)' : COLORS[b.name]}"></div>`).join('')
+      + `<div class="seg" style="left:${x(ev.end)}%;width:2px;background:var(--wd)" title="planned lights-out"></div>`;
+    const verdict = p.overflow > 0.01 ? `<span class="warn">Lights-out slips ${fmtD(p.overflow)} — that comes straight out of sleep.</span>`
+      : p.longest > 2.01 ? `<span class="warn">Fits, but a ${fmtD(p.longest)} block with no break.</span>`
+      : p.moved.length ? `Fits tonight; ${fmtD(p.moved.reduce((a, m) => a + m.hours, 0))} moves to earlier days.` : `<span class="ok">Everything fits tonight.</span>`;
+    return `<div class="card rule"><h3>${R.name}</h3><div class="how">${R.how}</div>
+      <div class="bar">${segs}</div><div class="axis"><span>${fmtT(ev.start)}</span><span>${fmtT(ev.start + span)}</span></div>
+      <div class="row"><span>Studied tonight</span><span class="big ${ch(p.studied, q?.studied ?? p.studied)}">${fmtD(p.studied)}</span></div>
+      <div class="row"><span>Breaks</span><span class="${ch(p.breakTime, q?.breakTime ?? p.breakTime)}">${p.breakTime ? fmtD(p.breakTime) : '—'}</span></div>
+      <div class="row"><span>Longest block</span><span class="${p.longest > 2.01 ? 'warn' : ''}">${fmtD(p.longest)}</span></div>
+      <div class="row"><span>Lights out</span><span class="${p.overflow > 0.01 ? 'warn' : ''} ${ch(p.lightsOut, q?.lightsOut ?? p.lightsOut)}">${fmtT(p.lightsOut)}</span></div>
+      <div class="row"><span>Moved to earlier days</span><span>${p.moved.length ? p.moved.map(m => `${m.name} ${fmtD(m.hours)}`).join(', ') : '—'}</span></div>
+      <div class="list">${p.blocks.map(b => `<div><span>${b.type === 'break' ? '☕ break' : b.name}</span><span>${fmtT(b.start)} · ${fmtD(b.dur)}</span></div>`).join('')}</div>
+      <div class="verdict">${verdict}</div></div>`;
+  }).join('');
+  renderScenario();
+}
+
+const SCENARIOS = [
+  { title: '1 · Test tomorrow (Math 3h)', text: 'The evening before a Math test: Math 3h, History 1.5h, English 1h, from 8:00 PM to a 10:45 PM lights-out. Watch rule A run past lights-out with a 3-hour Math block, while B–D cap Math and move the extra to earlier days.',
+    steps: [['Start from the default evening', [{ type: 'reset' }]]] },
+  { title: '2 · Short evening after late practice', text: 'Practice ran late, so the evening only starts at 9:30 PM. Even modest study asks don\'t fit; see which rules keep lights-out and what they move.',
+    steps: [['Default evening', [{ type: 'reset' }]], ['Evening starts 9:30 PM', [{ type: 'set', patch: { start: 21.5 } }]], ['Math down to 1.5h', [{ type: 'hours', i: 0, d: -1.5 }]]] },
+  { title: '3 · Light evening', text: 'Only 1h of English. Everything fits in every rule; check that breaks don\'t add clutter when there\'s little to do.',
+    steps: [['Default evening', [{ type: 'reset' }]], ['Math 0h', [{ type: 'hours', i: 0, d: -3 }]], ['History 0h', [{ type: 'hours', i: 1, d: -1.5 }]]] },
+  { title: '4 · Weekend catch-up (5h)', text: 'A long Saturday afternoon (1:00 PM–6:00 PM) with 5h asked. Here the cap decides how much can happen in one day at all.',
+    steps: [['Default evening', [{ type: 'reset' }]], ['Window 1:00–6:00 PM', [{ type: 'set', patch: { start: 13, end: 18 } }]], ['History 2.5h', [{ type: 'hours', i: 1, d: 1 }]]] },
+];
+let tab = 0, stepIdx = 0;
+function startScenario(i) { tab = i; stepIdx = 0; prev = null; ev = StudyRules.initial(); render(); }
+function runStep(i) { if (i !== stepIdx) return; prev = snapshot(); SCENARIOS[tab].steps[i][1].forEach(a => { ev = StudyRules.reduce(ev, a); }); stepIdx++; render(); }
+function renderScenario() {
+  document.getElementById('tabs').innerHTML = SCENARIOS.map((s, i) => `<button class="${i === tab ? 'on' : ''}" onclick="startScenario(${i})">${s.title}</button>`).join('');
+  const s = SCENARIOS[tab];
+  document.getElementById('scenario').innerHTML = `<p>${s.text}</p><p class="note">Clicking a tab resets the evening. Press the steps in order.</p>
+    <div class="steps">${s.steps.map(([l], i) => `<button class="${i < stepIdx ? 'done' : i === stepIdx ? 'next' : ''}" onclick="runStep(${i})">${i + 1}. ${l}</button>`).join('')}</div>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (!b) return;
+  if (b.dataset.act === 'reset') dispatch({ type: 'reset' }); else dispatch({ type: b.dataset.act, d: +b.dataset.d }); });
+render();
+</script>
+</body>
+</html>
